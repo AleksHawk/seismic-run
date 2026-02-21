@@ -2,54 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>seismic run</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Seismic World</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-    <div class="game-wrapper">
-        <div id="game-container">
-            <div class="bg-layer layer-1"></div>
-            <div class="bg-layer layer-2"></div>
-            
-            <div id="score-board">score: <span id="score">0</span></div>
-            
-            <div id="rocky">
+    <div id="game-window">
+        <div id="ui">SCORE: <span id="score">0</span></div>
+        
+        <div id="game-world">
+            <div id="player">
                 <img src="rocky.png" alt="rocky">
             </div>
-            
-            <div id="ground"></div>
         </div>
 
-        <div id="start-screen" class="overlay active">
-            <img src="logo.png" alt="seismic" class="main-logo">
-            <h1>seismic run</h1>
-            <p>press space or tap to jump</p>
-            <button id="start-btn" class="neon-btn">start game</button>
-        </div>
-
-        <div id="game-over-screen" class="overlay">
-            <h2>game over</h2>
-            <div class="final-score-box">
-                <p>your score</p>
-                <h3 id="final-score">0</h3>
-            </div>
-            <button id="restart-btn" class="neon-btn">play again</button>
-            <button id="share-btn" class="neon-btn alt">save & share</button>
+        <div id="overlay" class="active">
+            <img src="logo.png" class="menu-logo">
+            <h1>SEISMIC WORLD</h1>
+            <button onclick="startGame()" class="play-btn">START MISSION</button>
         </div>
     </div>
 
-    <div id="screenshot-export" class="screenshot-export">
-        <img src="logo.png" alt="seismic" class="screenshot-logo">
-        <div class="screenshot-title">i survived the seismic run!</div>
-        <div class="screenshot-score-box">
-            <span>score</span>
-            <span id="screenshot-score" class="big-score">0</span>
+    <div id="controls">
+        <div class="dir-btns">
+            <button id="btn-left">◀</button>
+            <button id="btn-right">▶</button>
         </div>
-        <img src="rocky.png" alt="rocky" class="screenshot-mascot">
-        <div class="screenshot-footer">can you beat my score?</div>
+        <button id="btn-jump">JUMP</button>
     </div>
 
     <script src="script.js"></script>
