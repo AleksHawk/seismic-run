@@ -3,34 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Seismic World</title>
+    <title>SEISMIC ADVENTURE</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <div id="game-window">
         <div id="ui">SCORE: <span id="score">0</span></div>
-        
         <div id="game-world">
             <div id="player">
                 <img src="rocky.png" alt="rocky">
             </div>
         </div>
-
-        <div id="overlay" class="active">
+        
+        <div id="menu" class="overlay active">
             <img src="logo.png" class="menu-logo">
             <h1>SEISMIC WORLD</h1>
-            <button onclick="startGame()" class="play-btn">START MISSION</button>
+            <p>SPACE to Jump | ARROWS to Move</p>
+            <button onclick="startGame()" class="play-btn">START GAME</button>
         </div>
-    </div>
 
-    <div id="controls">
-        <div class="dir-btns">
-            <button id="btn-left">◀</button>
-            <button id="btn-right">▶</button>
+        <div id="game-over" class="overlay">
+            <h2>Wasted...</h2>
+            <button onclick="location.reload()" class="play-btn">TRY AGAIN</button>
         </div>
-        <button id="btn-jump">JUMP</button>
     </div>
 
     <script src="script.js"></script>
