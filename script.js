@@ -1,150 +1,135 @@
 const rocky = document.getElementById('rocky');
 const gameContainer = document.getElementById('game-container');
-const scoreElement = document.getElementById('score');
-const startScreen = document.getElementById('start-screen');
+const scoreDisplay = document.getElementById('score');
 const gameOverScreen = document.getElementById('game-over-screen');
-const finalScoreElement = document.getElementById('final-score');
-const startBtn = document.getElementById('start-btn');
-const restartBtn = document.getElementById('restart-btn');
-const shareBtn = document.getElementById('share-btn');
-const screenshotExport = document.getElementById('screenshot-export');
-const screenshotScore = document.getElementById('screenshot-score');
-const bgLayers = document.querySelectorAll('.bg-layer');
+const startScreen = document.getElementById('start-screen');
 
-let isJumping = false;
-let isGameOver = true;
 let score = 0;
-let gameSpeed = 2000;
-let spawnInterval;
-let checkInterval;
+let isGameOver = true;
+let position = 40; // висота від землі
+let gravity = 2;
+let isJumping = false;
+let gameSpeed = 5;
 
+// Стрибок як у Маріо
 function jump() {
-    if (!isGameOver && !isJumping) {
-        isJumping = true;
-        rocky.classList.add('jump');
-        
-        setTimeout(() => {
-            rocky.classList.remove('jump');
-            isJumping = false;
-        }, 600);
-    }
+    if (isJumping || isGameOver) return;
+    isJumping = true;
+    let upInterval = setInterval(() => {
+        if (position >= 220) {
+            clearInterval(upInterval);
+            let downInterval = setInterval(() => {
+                if (position <= 40) {
+                    clearInterval(downInterval);
+                    isJumping = false;
+                }
+                position -= 5;
+                rocky.style.bottom = position + 'px';
+            }, 20);
+        }
+        position += 5;
+        rocky.style.bottom = position + 'px';
+    }, 20);
 }
 
+// Слухаємо тільки пробіл
 document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') jump();
-});
-gameContainer.addEventListener('mousedown', jump);
-gameContainer.addEventListener('touchstart', jump);
-
-function spawnEntity() {
-    if (isGameOver) return;
-
-    const isStone = Math.random() > 0.5;
-    const entity = document.createElement('div');
-    
-    if (isStone) {
-        entity.classList.add('stone');
-        entity.style.bottom = Math.random() > 0.5 ? '120px' : '60px';
-    } else {
-        entity.classList.add('obstacle');
-    }
-    
-    entity.classList.add('anim-move');
-    entity.style.animationDuration = (gameSpeed / 1000) + 's';
-    gameContainer.appendChild(entity);
-
-    setTimeout(() => {
-        if (entity.parentNode) {
-            entity.remove();
+    if (e.code === 'Space') {
+        if (isGameOver) {
+            startGame();
+        } else {
+            jump();
         }
-    }, gameSpeed);
+    }
+});
 
-    if (gameSpeed > 800) gameSpeed -= 10;
+function createObstacle() {
+    if (isGameOver) return;
+    const obstacle = document.createElement('div');
+    obstacle.classList.add('obstacle');
+    let obstacleLeft = 800;
+    obstacle.style.left = obstacleLeft + 'px';
+    gameContainer.appendChild(obstacle);
+
+    let moveInterval = setInterval(() => {
+        if (isGameOver) clearInterval(moveInterval);
+        obstacleLeft -= gameSpeed;
+        obstacle.style.left = obstacleLeft + 'px';
+
+        // Колізія з перешкодою
+        if (obstacleLeft > 100 && obstacleLeft < 170 && position < 80) {
+            endGame();
+            clearInterval(moveInterval);
+        }
+        
+        if (obstacleLeft < -50) {
+            clearInterval(moveInterval);
+            obstacle.remove();
+        }
+    }, 20);
+
+    // Рандомна поява наступної перешкоди
+    setTimeout(createObstacle, Math.random() * 2000 + 1000);
 }
 
-function checkCollision() {
+function createStone() {
     if (isGameOver) return;
+    const stone = document.createElement('div');
+    stone.classList.add('stone');
+    let stoneLeft = 800;
+    let stoneBottom = Math.random() * 150 + 100;
+    stone.style.left = stoneLeft + 'px';
+    stone.style.bottom = stoneBottom + 'px';
+    gameContainer.appendChild(stone);
 
-    const rockyRect = rocky.getBoundingClientRect();
-    const entities = document.querySelectorAll('.obstacle, .stone');
+    let moveInterval = setInterval(() => {
+        if (isGameOver) clearInterval(moveInterval);
+        stoneLeft -= gameSpeed;
+        stone.style.left = stoneLeft + 'px';
 
-    entities.forEach(entity => {
-        const entityRect = entity.getBoundingClientRect();
-
-        if (
-            rockyRect.right > entityRect.left + 10 &&
-            rockyRect.left < entityRect.right - 10 &&
-            rockyRect.bottom > entityRect.top + 10 &&
-            rockyRect.top < entityRect.bottom - 10
-        ) {
-            if (entity.classList.contains('obstacle')) {
-                endGame();
-            } else if (entity.classList.contains('stone')) {
-                score += 10;
-                scoreElement.innerText = score;
-                entity.remove();
-            }
+        // Збір камінчика (Маріо стиль)
+        if (stoneLeft > 100 && stoneLeft < 170 && 
+            position + 70 > stoneBottom && position < stoneBottom + 35) {
+            score += 10;
+            scoreDisplay.innerText = score;
+            stone.remove();
+            clearInterval(moveInterval);
         }
-    });
+    }, 20);
+
+    setTimeout(createStone, Math.random() * 3000 + 1500);
 }
 
 function startGame() {
     isGameOver = false;
     score = 0;
-    gameSpeed = 2000;
-    scoreElement.innerText = score;
-    
+    scoreDisplay.innerText = score;
     startScreen.classList.remove('active');
     gameOverScreen.classList.remove('active');
-    gameContainer.parentElement.classList.remove('earthquake');
     
-    document.querySelectorAll('.obstacle, .stone').forEach(e => e.remove());
+    // Очистка старих об'єктів
+    document.querySelectorAll('.obstacle, .stone').forEach(el => el.remove());
     
-    bgLayers.forEach(layer => layer.classList.add('anim-bg'));
-
-    clearInterval(spawnInterval);
-    clearInterval(checkInterval);
-    
-    spawnInterval = setInterval(spawnEntity, 1200);
-    checkInterval = setInterval(checkCollision, 50);
+    createObstacle();
+    createStone();
 }
 
 function endGame() {
     isGameOver = true;
-    clearInterval(spawnInterval);
-    clearInterval(checkInterval);
-    
-    bgLayers.forEach(layer => layer.classList.remove('anim-bg'));
-    document.querySelectorAll('.anim-move').forEach(e => e.style.animationPlayState = 'paused');
-    
-    gameContainer.parentElement.classList.add('earthquake');
-    
-    finalScoreElement.innerText = score;
-    screenshotScore.innerText = score;
-    
-    setTimeout(() => {
-        gameOverScreen.classList.add('active');
-    }, 500);
+    gameOverScreen.classList.add('active');
+    document.getElementById('final-score').innerText = score;
+    document.getElementById('screenshot-score').innerText = score;
 }
 
-startBtn.addEventListener('click', startGame);
-restartBtn.addEventListener('click', startGame);
+document.getElementById('start-btn').onclick = startGame;
+document.getElementById('restart-btn').onclick = startGame;
 
-shareBtn.addEventListener('click', () => {
-    const originalText = shareBtn.innerText;
-    shareBtn.innerText = "saving...";
-    
-    html2canvas(screenshotExport, {
-        backgroundColor: "#1a0500",
-        scale: 2,
-        useCORS: true,
-        logging: false
-    }).then(canvas => {
+// Кнопка скріншоту
+document.getElementById('share-btn').onclick = () => {
+    html2canvas(document.getElementById('screenshot-export')).then(canvas => {
         const link = document.createElement('a');
-        link.download = 'seismic-run-score.png';
-        link.href = canvas.toDataURL('image/png');
+        link.download = 'seismic-score.png';
+        link.href = canvas.toDataURL();
         link.click();
-        
-        shareBtn.innerText = originalText;
     });
-});
+};
