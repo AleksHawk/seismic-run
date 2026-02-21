@@ -2,110 +2,116 @@ const world = document.getElementById('game-world');
 const player = document.getElementById('player');
 const scoreEl = document.getElementById('score');
 
-let pX = 100, pY = 100, velocityY = 0, isGrounded = false;
-let score = 0, gameActive = false;
+// Налаштування фізики (Маріо-стайл)
+let pX = 50, pY = 200, velX = 0, velY = 0;
+let gravity = 0.8, friction = 0.8, jumpPower = -16;
+let score = 0, isLive = false;
 let keys = {};
 
-// Генерація рівня (платформи та камінці)
-const levelData = [
-    { x: 0, y: 0, w: 1000, h: 40 }, // Земля
-    { x: 400, y: 150, w: 200, h: 30 },
-    { x: 700, y: 250, w: 150, h: 30 },
-    { x: 1000, y: 150, w: 300, h: 30 },
+// Дані рівня
+const platforms = [
+    {x: 0, y: 0, w: 800, h: 50}, // Початкова земля
+    {x: 900, y: 0, w: 1200, h: 50}, // Наступна ділянка
+    {x: 300, y: 150, w: 150, h: 30},
+    {x: 550, y: 250, w: 200, h: 30},
+    {x: 1000, y: 180, w: 200, h: 30}
 ];
 
 const stones = [
-    { x: 450, y: 190 }, { x: 750, y: 290 }, { x: 1100, y: 190 }
+    {x: 350, y: 190}, {x: 600, y: 290}, {x: 1100, y: 220}
 ];
 
+// Створюємо світ
 function buildLevel() {
-    levelData.forEach(p => {
-        const div = document.createElement('div');
-        div.className = 'platform';
-        div.style.left = p.x + 'px';
-        div.style.bottom = p.y + 'px';
-        div.style.width = p.w + 'px';
-        div.style.height = p.h + 'px';
-        world.appendChild(div);
+    platforms.forEach(p => {
+        const el = document.createElement('div');
+        el.className = 'platform';
+        el.style.left = p.x + 'px';
+        el.style.bottom = p.y + 'px';
+        el.style.width = p.w + 'px';
+        el.style.height = p.h + 'px';
+        world.appendChild(el);
     });
 
-    stones.forEach((s, i) => {
-        const div = document.createElement('div');
-        div.className = 'item-stone';
-        div.id = 'stone-' + i;
-        div.style.left = s.x + 'px';
-        div.style.bottom = s.y + 'px';
-        world.appendChild(div);
+    stones.forEach(s => {
+        const el = document.createElement('div');
+        el.className = 'item-stone';
+        el.style.left = s.x + 'px';
+        el.style.bottom = s.y + 'px';
+        world.appendChild(el);
     });
 }
 
 function update() {
-    if (!gameActive) return;
+    if (!isLive) return;
 
-    // Рух
-    if (keys['ArrowRight'] || keys['right']) pX += 7;
-    if (keys['ArrowLeft'] || keys['left']) pX -= 7;
+    // Керування
+    if (keys['ArrowRight']) velX += 1.5;
+    if (keys['ArrowLeft']) velX -= 1.5;
+    if ((keys['Space'] || keys['ArrowUp']) && player.onGround) {
+        velY = jumpPower;
+        player.onGround = false;
+    }
 
-    // Гравітація
-    velocityY -= 1.2;
-    pY += velocityY;
+    // Застосування фізики
+    velX *= friction;
+    velY += gravity;
+    pX += velX;
+    pY -= velY;
 
-    isGrounded = false;
+    player.onGround = false;
 
-    // Перевірка зіткнень з платформами
-    levelData.forEach(p => {
-        if (pX + 50 > p.x && pX < p.x + p.w && 
-            pY <= p.y + p.h && pY + velocityY >= p.y + p.h - 20) {
-            pY = p.y + p.h;
-            velocityY = 0;
-            isGrounded = true;
+    // Колізії з платформами
+    platforms.forEach(p => {
+        // Перевірка чи гравець над платформою
+        if (pX + 40 > p.x && pX < p.x + p.w) {
+            let platTop = 400 - p.y - p.h;
+            // Приземлення
+            if (pY + 50 >= platTop && pY + 50 <= platTop + 20 && velY >= 0) {
+                pY = platTop - 50;
+                velY = 0;
+                player.onGround = true;
+            }
         }
     });
 
-    // Перевірка збору камінців
+    // Збір камінців
     document.querySelectorAll('.item-stone').forEach(s => {
         let sX = parseInt(s.style.left);
-        let sY = parseInt(s.style.bottom);
-        if (pX + 50 > sX && pX < sX + 35 && pY + 60 > sY && pY < sY + 35) {
+        let sY = 400 - parseInt(s.style.bottom) - 30;
+        if (Math.abs(pX - sX) < 40 && Math.abs(pY - sY) < 40) {
             s.remove();
             score += 10;
             scoreEl.innerText = score;
         }
     });
 
-    // Смерть при падінні
-    if (pY < -100) resetGame();
-
-    // Оновлення позиції
+    // Оновлення екрану
     player.style.left = pX + 'px';
-    player.style.bottom = pY + 'px';
+    player.style.top = pY + 'px';
 
-    // Камера (як у Маріо)
+    // Камера
     if (pX > 300) {
-        world.style.transform = `translateX(-${pX - 300}px)`;
+        world.style.left = -(pX - 300) + 'px';
     }
+
+    // Падіння в прірву
+    if (pY > 450) die();
 
     requestAnimationFrame(update);
 }
 
+function die() {
+    isLive = false;
+    document.getElementById('game-over').classList.add('active');
+}
+
 function startGame() {
-    document.getElementById('overlay').classList.remove('active');
-    gameActive = true;
+    document.getElementById('menu').classList.remove('active');
+    isLive = true;
     buildLevel();
     update();
 }
 
-function resetGame() {
-    location.reload(); // Найпростіший спосіб скинути рівень
-}
-
-// Керування
 window.addEventListener('keydown', e => keys[e.code] = true);
 window.addEventListener('keyup', e => keys[e.code] = false);
-
-// Мобільні кнопки
-const bL = document.getElementById('btn-left'), bR = document.getElementById('btn-right'), bJ = document.getElementById('btn-jump');
-bL.ontouchstart = () => keys['left'] = true; bL.ontouchend = () => keys['left'] = false;
-bR.ontouchstart = () => keys['right'] = true; bR.ontouchend = () => keys['right'] = false;
-bJ.onclick = () => { if (isGrounded) velocityY = 20; };
-window.addEventListener('keydown', e => { if (e.code === 'Space' && isGrounded) velocityY = 20; });
