@@ -3,30 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SEISMIC ADVENTURE</title>
+    <title>SEISMIC SURF</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-    <div id="game-window">
-        <div id="ui">SCORE: <span id="score">0</span></div>
-        <div id="game-world">
-            <div id="player">
-                <img src="rocky.png" alt="rocky">
-            </div>
-        </div>
+    <div id="game-container">
+        <div id="ui">SCORE: <span id="score-val">0</span></div>
         
-        <div id="menu" class="overlay active">
-            <img src="logo.png" class="menu-logo">
-            <h1>SEISMIC WORLD</h1>
-            <p>SPACE to Jump | ARROWS to Move</p>
-            <button onclick="startGame()" class="play-btn">START GAME</button>
+        <div class="lane" id="lane-0"></div>
+        <div class="lane" id="lane-1"></div>
+        <div class="lane" id="lane-2"></div>
+
+        <div id="player">
+            <img src="rocky.png" alt="rocky">
         </div>
 
-        <div id="game-over" class="overlay">
-            <h2>Wasted...</h2>
-            <button onclick="location.reload()" class="play-btn">TRY AGAIN</button>
+        <div id="overlay" class="active">
+            <img src="logo.png" class="menu-logo">
+            <h1>SEISMIC SURF</h1>
+            <p>Use ARROWS or TAP lanes to move</p>
+            <button onclick="startGame()" class="play-btn">START RUN</button>
         </div>
+    </div>
+
+    <div id="screenshot-export" class="screenshot-export">
+        <img src="logo.png" class="ss-logo">
+        <div class="ss-score-label">FINAL SCORE</div>
+        <div id="ss-score-val" class="ss-score-num">0</div>
+        <img src="rocky.png" class="ss-mascot">
+        <div class="ss-footer">CAN YOU BEAT ME?</div>
     </div>
 
     <script src="script.js"></script>
