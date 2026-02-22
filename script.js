@@ -70,7 +70,8 @@ let w, h;
 function resize() { w = wrapper.clientWidth; h = wrapper.clientHeight; canvas.width = w; canvas.height = h; }
 window.addEventListener('resize', resize); resize();
 
-let isLive = false, score = 0, speed = 7.5;
+// ПІДНЯВ СТАРТОВУ ШВИДКІСТЬ І ФІЗИКУ
+let isLive = false, score = 0, speed = 8.5;
 let energy = 0, feverMode = false, feverTimer = 0;
 let frameCount = 0, shakeTime = 0;
 let isThrusting = false;
@@ -93,7 +94,7 @@ function tryStartGame() {
 }
 
 function initGame() {
-    score = 0; speed = 7.5; energy = 0; feverMode = false; feverTimer = 0; frameCount = 0;
+    score = 0; speed = 8.5; energy = 0; feverMode = false; feverTimer = 0; frameCount = 0;
     obstacles = []; stones = []; particles = [];
     isThrusting = false; p.floorY = h - 30; p.ceilY = 30; p.y = p.floorY - p.h; p.vy = 0;
     scoreEl.innerText = score; energyEl.innerText = `energy: 0/5`; energyEl.classList.remove('fever');
@@ -115,13 +116,23 @@ wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' &&
 wrapper.addEventListener('mouseup', e => { stopThrust(); });
 
 function spawn() {
-    let type = Math.random() > 0.40 ? 'stone' : 'obstacle';
+    // ДИНАМІЧНИЙ СПАВН: кожні 15 секунд (900 кадрів) шанс на трубу росте на 15%
+    // Стартуємо з 20% труб (80% камінців)
+    let obstacleChance = Math.min(0.65, 0.20 + Math.floor(frameCount / 900) * 0.15);
+
+    let type = Math.random() > obstacleChance ? 'stone' : 'obstacle';
+
     if (type === 'obstacle') {
         let isTop = Math.random() > 0.5;
         let obsH = Math.random() * (h/2.5) + 40;
         obstacles.push({ x: w, w: 50, h: obsH, y: isTop ? p.ceilY : p.floorY - obsH });
     } else {
         stones.push({ x: w, y: Math.random() * (h - 140) + 70, w: 45, h: 45, collected: false });
+        
+        // Поки труб мало (перші 30 сек), є високий шанс спавну подвійного камінця!
+        if (obstacleChance < 0.40 && Math.random() > 0.4) {
+            stones.push({ x: w + 60, y: Math.random() * (h - 140) + 70, w: 45, h: 45, collected: false });
+        }
     }
 }
 
@@ -174,15 +185,24 @@ function loop() {
         }
     }
 
+    // ХАРДКОРНЕ ПРИСКОРЕННЯ (+2.0 швидкості кожні 4 секунди)
     if (isLive && frameCount % 240 === 0) {
-        speed += 1.5; wrapper.style.boxShadow = "inset 0 0 60px #ff0000";
+        speed += 2.0; wrapper.style.boxShadow = "inset 0 0 60px #ff0000";
         setTimeout(() => wrapper.style.boxShadow = "none", 300);
     }
 
-    if (isLive && frameCount % Math.max(20, 90 - Math.floor(speed*1.5)) === 0) spawn();
+    // Пришвидшений спавн об'єктів
+    if (isLive && frameCount % Math.max(15, 65 - Math.floor(speed*1.5)) === 0) spawn();
 
     if (isLive) {
-        if (isThrusting) { p.vy -= 0.6; createParticles(p.x + 10, p.y + p.h, '#ff4500', 2); } else { p.vy += 0.4; }
+        // РІЗКА ФІЗИКА (було 0.6 і 0.4, стало 0.85 і 0.55)
+        if (isThrusting) { 
+            p.vy -= 0.85; 
+            createParticles(p.x + 10, p.y + p.h, '#ff4500', 2); 
+        } else { 
+            p.vy += 0.55; 
+        }
+        
         p.vy *= 0.92; p.y += p.vy;
         if (p.y + p.h > p.floorY) { p.y = p.floorY - p.h; p.vy = 0; } else if (p.y < p.ceilY) { p.y = p.ceilY; p.vy = 0; }
         score += feverMode ? 0.3 : 0.1; scoreEl.innerText = Math.floor(score);
@@ -242,7 +262,6 @@ document.getElementById('btn-save').onclick = function() {
     });
 };
 
-// Оновлений текст для Twitter X
 document.getElementById('btn-x').onclick = function() {
     const txt = encodeURIComponent(`participating in a challenge from @AleksYastreb! 🚀\nmy record (${currentPlayerName}): ${Math.floor(score)} points 🪨\nmade with love for the @SeismicSys community ❤️\n\ntry to beat it: https://alekshawk.github.io/seismic-run/\n\ni pass the baton to: @`);
     window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
