@@ -6,22 +6,9 @@ const energyEl = document.getElementById('energy-val');
 const playerNameInput = document.getElementById('player-name');
 const inputGroup = document.querySelector('.input-group');
 
-// Переклад тільки для правил
 const rulesI18n = {
-    en: {
-        title: "rules:",
-        r1: "hold space or touch screen to fly up",
-        r2: "collect 5 stones to activate superpower",
-        r3: "avoid red obstacles",
-        r4: "in fever mode you are invincible!"
-    },
-    ua: {
-        title: "правила:",
-        r1: "затисни екран щоб летіти",
-        r2: "збери 5 камінців для суперсили",
-        r3: "уникай червоних труб",
-        r4: "у fever mode ти безсмертний!"
-    }
+    en: { title: "rules:", r1: "hold space or touch screen to fly up", r2: "collect 5 stones to activate superpower", r3: "avoid red obstacles", r4: "in fever mode you are invincible!" },
+    ua: { title: "правила:", r1: "затисни екран щоб летіти", r2: "збери 5 камінців для суперсили", r3: "уникай червоних труб", r4: "у fever mode ти безсмертний!" }
 };
 
 function setRulesLang(lang) {
@@ -37,22 +24,10 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
     };
 });
 
-// налаштування firebase
-const firebaseConfig = {
-  apiKey: "твоя-апі-ключ",
-  authDomain: "твій-проект.firebaseapp.com",
-  databaseURL: "https://твій-проект.firebaseio.com",
-  projectId: "твій-проект"
-};
-
+const firebaseConfig = { apiKey: "твоя-апі-ключ", authDomain: "твій-проект.firebaseapp.com", databaseURL: "https://твій-проект.firebaseio.com", projectId: "твій-проект" };
 let db;
-if (firebaseConfig.apiKey !== "твоя-апі-ключ") {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.database();
-    document.getElementById('text-lb-wait').innerText = "live syncing...";
-}
+if (firebaseConfig.apiKey !== "твоя-апі-ключ") { firebase.initializeApp(firebaseConfig); db = firebase.database(); }
 
-// локальний рекорд
 let bestLocalScore = localStorage.getItem('seismic_best_score') || 0;
 let bestLocalName = localStorage.getItem('seismic_best_name') || 'nobody';
 document.getElementById('best-name').innerText = bestLocalName;
@@ -70,13 +45,12 @@ let w, h;
 function resize() { w = wrapper.clientWidth; h = wrapper.clientHeight; canvas.width = w; canvas.height = h; }
 window.addEventListener('resize', resize); resize();
 
-let isLive = false, score = 0, speed = 7.5;
-let energy = 0, feverMode = false, feverTimer = 0;
-let frameCount = 0, shakeTime = 0;
+// ЕКСТРЕМАЛЬНІ НАЛАШТУВАННЯ ДЛЯ ТЕСТУ
+let isLive = false, score = 0, speed = 9.0;
+let energy = 0, feverMode = false, feverTimer = 0, frameCount = 0, shakeTime = 0;
 let isThrusting = false;
 let obstacles = [], stones = [], particles = [];
 let currentPlayerName = "";
-
 const p = { x: 100, y: 0, w: 60, h: 60, vy: 0, floorY: 0, ceilY: 0 };
 
 function tryStartGame() {
@@ -93,13 +67,11 @@ function tryStartGame() {
 }
 
 function initGame() {
-    score = 0; speed = 7.5; energy = 0; feverMode = false; feverTimer = 0; frameCount = 0;
+    score = 0; speed = 9.0; energy = 0; feverMode = false; feverTimer = 0; frameCount = 0;
     obstacles = []; stones = []; particles = [];
     isThrusting = false; p.floorY = h - 30; p.ceilY = 30; p.y = p.floorY - p.h; p.vy = 0;
     scoreEl.innerText = score; energyEl.innerText = `energy: 0/5`; energyEl.classList.remove('fever');
     isLive = true;
-    
-    document.getElementById('ss-foot-text').innerText = `can you beat ${currentPlayerName}'s score?`;
     bgMusic.currentTime = 0; bgMusic.play().catch(()=>{});
     requestAnimationFrame(loop);
 }
@@ -115,8 +87,8 @@ wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' &&
 wrapper.addEventListener('mouseup', e => { stopThrust(); });
 
 function spawn() {
-    // 60% шанс на камінець, 40% шанс на трубу
-    let type = Math.random() > 0.40 ? 'stone' : 'obstacle';
+    // 70% ШАНС НА КАМІНЕЦЬ (їх буде дуже багато!)
+    let type = Math.random() > 0.30 ? 'stone' : 'obstacle';
     if (type === 'obstacle') {
         let isTop = Math.random() > 0.5;
         let obsH = Math.random() * (h/2.5) + 40;
@@ -135,22 +107,13 @@ function createParticles(x, y, color, count) {
 function die() {
     isLive = false; shakeTime = 20; isThrusting = false;
     hitSfx.currentTime = 0; hitSfx.play().catch(()=>{}); bgMusic.pause();
-    if(navigator.vibrate) navigator.vibrate([300, 100, 300]);
     createParticles(p.x + p.w/2, p.y + p.h/2, '#ff0000', 50);
-    
     let finalSc = Math.floor(score);
     if (finalSc > bestLocalScore) {
         bestLocalScore = finalSc; bestLocalName = currentPlayerName;
         localStorage.setItem('seismic_best_score', bestLocalScore);
         localStorage.setItem('seismic_best_name', bestLocalName);
-        document.getElementById('best-name').innerText = bestLocalName;
-        document.getElementById('best-score').innerText = bestLocalScore;
-        
-        if (db) {
-            db.ref('leaderboard/' + currentPlayerName).set({ score: finalSc });
-        }
     }
-
     setTimeout(() => {
         document.getElementById('final-score').innerText = finalSc;
         document.getElementById('ss-score-val').innerText = finalSc;
@@ -169,47 +132,25 @@ function loop() {
 
     if (feverMode) {
         feverTimer--;
-        if (feverTimer <= 0) {
-            feverMode = false; energy = 0; speed -= 3;
-            energyEl.innerText = `energy: 0/5`; energyEl.classList.remove('fever');
-        }
+        if (feverTimer <= 0) { feverMode = false; energy = 0; speed -= 3; energyEl.innerText = `energy: 0/5`; energyEl.classList.remove('fever'); }
     }
 
-    // ХАРДКОРНЕ ПРИСКОРЕННЯ ГРИ
-    if (isLive && frameCount % 240 === 0) {
-        speed += 2.0; wrapper.style.boxShadow = "inset 0 0 60px #ff0000";
-        setTimeout(() => wrapper.style.boxShadow = "none", 300);
-    }
-
-    if (isLive && frameCount % Math.max(20, 90 - Math.floor(speed*1.5)) === 0) spawn();
+    if (isLive && frameCount % 240 === 0) { speed += 2.0; }
+    if (isLive && frameCount % Math.max(15, 80 - Math.floor(speed*1.5)) === 0) spawn();
 
     if (isLive) {
-        // УЛЬТРА-РІЗКА ФІЗИКА РОКІ
-        if (isThrusting) { 
-            p.vy -= 1.8; // Тяга джетпака (була 0.6)
-            createParticles(p.x + 10, p.y + p.h, '#ff4500', 2); 
-        } else { 
-            p.vy += 1.2; // Гравітація (була 0.4)
-        }
-        
-        p.vy *= 0.85; // Опір повітря (був 0.92) - зупиняється миттєво
-        p.y += p.vy;
-        
+        // ЕКСТРЕМАЛЬНА ФІЗИКА
+        if (isThrusting) { p.vy -= 2.5; } else { p.vy += 1.8; }
+        p.vy *= 0.82; p.y += p.vy;
         if (p.y + p.h > p.floorY) { p.y = p.floorY - p.h; p.vy = 0; } else if (p.y < p.ceilY) { p.y = p.ceilY; p.vy = 0; }
         score += feverMode ? 0.3 : 0.1; scoreEl.innerText = Math.floor(score);
-        if (feverMode) createParticles(p.x, p.y + p.h/2, '#ffaa00', 1);
     }
 
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let obs = obstacles[i]; if (isLive) obs.x -= speed;
-        ctx.fillStyle = "#ff0000"; ctx.shadowBlur = 20; ctx.shadowColor = "#ff0000"; ctx.fillRect(obs.x, obs.y, obs.w, obs.h); ctx.shadowBlur = 0;
-
+        ctx.fillStyle = "#ff0000"; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
         if (isLive && p.x + 10 < obs.x + obs.w && p.x + p.w - 10 > obs.x && p.y + 10 < obs.y + obs.h && p.y + p.h - 10 > obs.y) {
-            if (feverMode) {
-                score += 50; hitSfx.currentTime = 0; hitSfx.play().catch(()=>{}); shakeTime = 15;
-                createParticles(obs.x + obs.w/2, obs.y + obs.h/2, '#ff0000', 40); if(navigator.vibrate) navigator.vibrate(100);
-                obstacles.splice(i, 1); continue;
-            } else { die(); }
+            if (feverMode) { score += 50; obstacles.splice(i, 1); continue; } else { die(); }
         }
         if (obs.x + obs.w < 0) obstacles.splice(i, 1);
     }
@@ -217,18 +158,10 @@ function loop() {
     for (let i = stones.length - 1; i >= 0; i--) {
         let st = stones[i]; if (isLive) st.x -= speed;
         if (!st.collected) {
-            ctx.shadowBlur = 15; ctx.shadowColor = "#00ffff"; ctx.drawImage(stoneImg, st.x, st.y, st.w, st.h); ctx.shadowBlur = 0;
+            ctx.drawImage(stoneImg, st.x, st.y, st.w, st.h);
             if (isLive && p.x < st.x + st.w && p.x + p.w > st.x && p.y < st.y + st.h && p.y + p.h > st.y) {
-                st.collected = true; score += feverMode ? 40 : 15;
-                if (!feverMode) {
-                    energy++;
-                    if (energy >= 5) {
-                        feverMode = true; feverTimer = 300; speed += 3;
-                        energyEl.innerText = "🔥 fever mode! 🔥"; energyEl.classList.add('fever');
-                    } else { energyEl.innerText = `energy: ${energy}/5`; }
-                }
-                coinSfx.currentTime = 0; coinSfx.play().catch(()=>{}); if(navigator.vibrate) navigator.vibrate(40);
-                createParticles(st.x + st.w/2, st.y + st.h/2, "#00ffff", 15);
+                st.collected = true; score += 20;
+                if (!feverMode) { energy++; if (energy >= 5) { feverMode = true; feverTimer = 300; speed += 3; energyEl.innerText = "🔥 FEVER! 🔥"; energyEl.classList.add('fever'); } else { energyEl.innerText = `energy: ${energy}/5`; } }
             }
         }
         if (st.x + st.w < 0) stones.splice(i, 1);
@@ -239,21 +172,11 @@ function loop() {
         ctx.fillStyle = pt.color; ctx.fillRect(pt.x, pt.y, 4, 4); if (pt.life <= 0) particles.splice(i, 1);
     }
 
-    if (isLive) { ctx.save(); ctx.shadowBlur = feverMode ? 25 : 10; ctx.shadowColor = feverMode ? "#ff4500" : "#ffaa00"; ctx.drawImage(rockyImg, p.x, p.y, p.w, p.h); ctx.restore(); }
-    ctx.restore(); if (isLive || shakeTime > 0 || particles.length > 0) requestAnimationFrame(loop);
+    if (isLive) { ctx.drawImage(rockyImg, p.x, p.y, p.w, p.h); }
+    ctx.restore(); if (isLive || particles.length > 0) requestAnimationFrame(loop);
 }
 
 document.getElementById('btn-start').onclick = tryStartGame;
 document.getElementById('btn-restart').onclick = () => { document.getElementById('game-over').classList.remove('active'); initGame(); };
-document.getElementById('btn-save').onclick = function() {
-    const originalText = this.innerText; this.innerText = "saving...";
-    html2canvas(document.getElementById('ss-export'), { backgroundColor: "#05000a", scale: 2, logging: false }).then(canvas => {
-        const link = document.createElement('a'); link.download = 'seismic-run-record.png'; link.href = canvas.toDataURL('image/png'); link.click();
-        this.innerText = "saved!"; setTimeout(() => this.innerText = originalText, 2000);
-    });
-};
-
-document.getElementById('btn-x').onclick = function() {
-    const txt = encodeURIComponent(`participating in a challenge from @AleksYastreb! 🚀\nmy record (${currentPlayerName}): ${Math.floor(score)} points 🪨\nmade with love for the @SeismicSys community ❤️\n\ntry to beat it: https://alekshawk.github.io/seismic-run/\n\ni pass the baton to: @`);
-    window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
-};
+document.getElementById('btn-save').onclick = function() { html2canvas(document.getElementById('ss-export')).then(canvas => { const link = document.createElement('a'); link.download = 'rec.png'; link.href = canvas.toDataURL(); link.click(); }); };
+document.getElementById('btn-x').onclick = function() { window.open(`https://twitter.com/intent/tweet?text=score:${Math.floor(score)}`, '_blank'); };
