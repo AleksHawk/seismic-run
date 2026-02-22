@@ -1,49 +1,49 @@
-body {
+body{
     margin:0;
     overflow:hidden;
-    font-family:Orbitron;
     background:black;
+    font-family:Orbitron;
 }
 
-#game {
-    position:relative;
+#game{
     width:100vw;
     height:100vh;
+    position:relative;
     overflow:hidden;
 }
 
-canvas {
+canvas{
     position:absolute;
     inset:0;
 }
 
-#score {
+#score{
     position:absolute;
     top:30px;
     width:100%;
     text-align:center;
-    font-size:40px;
+    font-size:42px;
     color:#00ffff;
-    text-shadow:0 0 20px #00ffff;
-    z-index:10;
+    text-shadow:0 0 25px #00ffff;
+    z-index:5;
 }
 
-#player {
+#player{
     position:absolute;
     bottom:120px;
     width:90px;
     left:50%;
     transform:translateX(-50%);
-    z-index:5;
+    z-index:10;
     transition:left .15s cubic-bezier(.2,.8,.3,1.5);
 }
 
-#player img {
+#player img{
     width:100%;
     filter:drop-shadow(0 0 25px #ff4500);
 }
 
-#menu {
+#menu{
     position:absolute;
     inset:0;
     background:rgba(0,0,0,.9);
@@ -55,22 +55,21 @@ canvas {
     z-index:20;
 }
 
-#menu.active { display:flex; }
-#menu:not(.active){ display:none; }
+#menu.active{display:flex}
+#menu:not(.active){display:none}
 
-.logo {
-    width:250px;
+.logo{
+    width:260px;
     margin-bottom:30px;
 }
 
-button {
+button{
     padding:18px 60px;
-    font-size:22px;
     border:none;
     border-radius:50px;
+    font-size:22px;
     background:linear-gradient(45deg,#ff4500,#ffaa00);
     color:white;
-    font-family:Orbitron;
     cursor:pointer;
     box-shadow:0 0 40px #ff4500;
 }
