@@ -34,7 +34,15 @@ canvas { position: absolute; inset: 0; z-index: 1; display: block; }
 .logo { width: 220px; margin-bottom: 20px; filter: drop-shadow(0 0 20px #ff4500); }
 h1 { font-size: 40px; text-shadow: 0 0 20px #ff4500; margin-bottom: 5px; }
 h1.red { color: #ff0000; text-shadow: 0 0 25px #ff0000; }
-p { color: #aaa; margin-bottom: 30px; font-size: 16px; }
+p { color: #aaa; margin-bottom: 20px; font-size: 16px; }
+
+#player-name {
+    padding: 15px; border: 2px solid #ff4500; border-radius: 30px;
+    background: rgba(0,0,0,0.5); color: #fff; font-family: 'orbitron';
+    font-size: 16px; text-align: center; margin-bottom: 25px; outline: none;
+    width: 250px; text-transform: lowercase;
+}
+#player-name:focus { box-shadow: 0 0 15px #ff4500; }
 
 .buttons { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 15px; width: 90%; }
 button {
