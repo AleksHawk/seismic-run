@@ -115,7 +115,6 @@ wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' &&
 wrapper.addEventListener('mouseup', e => { stopThrust(); });
 
 function spawn() {
-    // 60% шанс на камінець, 40% на трубу
     let type = Math.random() > 0.40 ? 'stone' : 'obstacle';
     if (type === 'obstacle') {
         let isTop = Math.random() > 0.5;
@@ -175,7 +174,6 @@ function loop() {
         }
     }
 
-    // ХАРДКОРНЕ ПРИСКОРЕННЯ (+2.0 швидкості кожні 4 секунди)
     if (isLive && frameCount % 240 === 0) {
         speed += 2.0; wrapper.style.boxShadow = "inset 0 0 60px #ff0000";
         setTimeout(() => wrapper.style.boxShadow = "none", 300);
@@ -184,15 +182,15 @@ function loop() {
     if (isLive && frameCount % Math.max(20, 90 - Math.floor(speed*1.5)) === 0) spawn();
 
     if (isLive) {
-        // ОНОВЛЕНА ШВИДКА ФІЗИКА РОКІ
+        // УЛЬТРА-РІЗКА ФІЗИКА РОКІ
         if (isThrusting) { 
-            p.vy -= 0.9; // Піднімається швидше (було 0.6)
+            p.vy -= 1.8; // Злітає в 3 рази швидше
             createParticles(p.x + 10, p.y + p.h, '#ff4500', 2); 
         } else { 
-            p.vy += 0.7; // Падає швидше (було 0.4)
+            p.vy += 1.2; // Падає дуже різко
         }
         
-        p.vy *= 0.90; // Менше "плаває" по інерції, зупиняється різкіше (було 0.92)
+        p.vy *= 0.85; // Миттєва зупинка в повітрі, ніякої "мильної" інерції
         p.y += p.vy;
         
         if (p.y + p.h > p.floorY) { p.y = p.floorY - p.h; p.vy = 0; } else if (p.y < p.ceilY) { p.y = p.ceilY; p.vy = 0; }
