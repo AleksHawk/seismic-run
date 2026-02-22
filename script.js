@@ -6,49 +6,34 @@ const energyEl = document.getElementById('energy-val');
 const playerNameInput = document.getElementById('player-name');
 const inputGroup = document.querySelector('.input-group');
 
-// словник для перекладу
-const i18n = {
+// Переклад тільки для правил
+const rulesI18n = {
     en: {
-        top: "global top", title: "seismic run", placeholder: "enter nickname", error: "nickname required!", btnStart: "start run",
-        rules: "rules:", r1: "hold space or touch screen to fly up", r2: "collect 5 stones to activate superpower", r3: "avoid red obstacles", r4: "in fever mode you are invincible!",
-        wasted: "wasted!", final: "final score: ", btnRestart: "play again", btnSave: "save pic", btnX: "share to x",
-        ssTitle: "i survived seismic run!", ssScore: "score", energy: "energy: ", fever: "🔥 fever mode! 🔥", footBeat: "can you beat my score?"
+        title: "rules:",
+        r1: "hold space or touch screen to fly up",
+        r2: "collect 5 stones to activate superpower",
+        r3: "avoid red obstacles",
+        r4: "in fever mode you are invincible!"
     },
     ua: {
-        top: "глобальний топ", title: "seismic run", placeholder: "введи нікнейм", error: "нікнейм обов'язковий!", btnStart: "почати гру",
-        rules: "правила:", r1: "затисни екран щоб летіти", r2: "збери 5 камінців для суперсили", r3: "уникай червоних труб", r4: "у fever mode ти безсмертний!",
-        wasted: "знищено!", final: "твій рахунок: ", btnRestart: "грати знову", btnSave: "зберегти фото", btnX: "поділитися в x",
-        ssTitle: "я вижив у seismic run!", ssScore: "рахунок", energy: "енергія: ", fever: "🔥 суперсила! 🔥", footBeat: "зможеш побити мій рекорд?"
+        title: "правила:",
+        r1: "затисни екран щоб летіти",
+        r2: "збери 5 камінців для суперсили",
+        r3: "уникай червоних труб",
+        r4: "у fever mode ти безсмертний!"
     }
 };
 
-let currentLang = 'en';
-
-function setLang(lang) {
-    currentLang = lang;
-    document.getElementById('text-top').innerText = i18n[lang].top;
-    document.getElementById('text-title').innerText = i18n[lang].title;
-    playerNameInput.placeholder = i18n[lang].placeholder;
-    document.getElementById('input-error-msg').innerText = i18n[lang].error;
-    document.getElementById('btn-start').innerText = i18n[lang].btnStart;
-    document.getElementById('text-rules').innerText = i18n[lang].rules;
-    document.getElementById('rules-list').innerHTML = `<li>${i18n[lang].r1}</li><li>${i18n[lang].r2}</li><li>${i18n[lang].r3}</li><li>${i18n[lang].r4}</li>`;
-    document.getElementById('text-wasted').innerText = i18n[lang].wasted;
-    document.getElementById('text-final').innerHTML = `${i18n[lang].final} <span id="final-score">${Math.floor(score)}</span>`;
-    document.getElementById('btn-restart').innerText = i18n[lang].btnRestart;
-    document.getElementById('btn-save').innerText = i18n[lang].btnSave;
-    document.getElementById('btn-x').innerText = i18n[lang].btnX;
-    document.getElementById('text-ss-title').innerText = i18n[lang].ssTitle;
-    document.getElementById('text-ss-score').innerText = i18n[lang].ssScore;
-    document.getElementById('ss-foot-text').innerText = i18n[lang].footBeat;
-    energyEl.innerText = feverMode ? i18n[lang].fever : `${i18n[lang].energy}${energy}/5`;
+function setRulesLang(lang) {
+    document.getElementById('text-rules').innerText = rulesI18n[lang].title;
+    document.getElementById('rules-list').innerHTML = `<li>${rulesI18n[lang].r1}</li><li>${rulesI18n[lang].r2}</li><li>${rulesI18n[lang].r3}</li><li>${rulesI18n[lang].r4}</li>`;
 }
 
 document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.onclick = () => {
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        setLang(btn.dataset.lang);
+        setRulesLang(btn.dataset.lang);
     };
 });
 
@@ -57,19 +42,14 @@ const firebaseConfig = {
   apiKey: "твоя-апі-ключ",
   authDomain: "твій-проект.firebaseapp.com",
   databaseURL: "https://твій-проект.firebaseio.com",
-  projectId: "твій-проект",
-  storageBucket: "твій-проект.appspot.com",
-  messagingSenderId: "цифри",
-  appId: "твій-апп-айді"
+  projectId: "твій-проект"
 };
 
 let db;
-// перевірка, чи вставлені ключі firebase
 if (firebaseConfig.apiKey !== "твоя-апі-ключ") {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
     document.getElementById('text-lb-wait').innerText = "live syncing...";
-    // тут буде логіка зчитування топ-1, коли підключиш базу
 }
 
 // локальний рекорд як заглушка
@@ -116,7 +96,7 @@ function initGame() {
     score = 0; speed = 7.5; energy = 0; feverMode = false; feverTimer = 0; frameCount = 0;
     obstacles = []; stones = []; particles = [];
     isThrusting = false; p.floorY = h - 30; p.ceilY = 30; p.y = p.floorY - p.h; p.vy = 0;
-    scoreEl.innerText = score; energyEl.innerText = `${i18n[currentLang].energy}0/5`; energyEl.classList.remove('fever');
+    scoreEl.innerText = score; energyEl.innerText = `energy: 0/5`; energyEl.classList.remove('fever');
     isLive = true;
     
     document.getElementById('ss-foot-text').innerText = `can you beat ${currentPlayerName}'s score?`;
@@ -165,7 +145,6 @@ function die() {
         document.getElementById('best-name').innerText = bestLocalName;
         document.getElementById('best-score').innerText = bestLocalScore;
         
-        // відправка рекорду у firebase (коли будуть ключі)
         if (db) {
             db.ref('leaderboard/' + currentPlayerName).set({ score: finalSc });
         }
@@ -173,7 +152,6 @@ function die() {
 
     setTimeout(() => {
         document.getElementById('final-score').innerText = finalSc;
-        document.getElementById('text-final').innerHTML = `${i18n[currentLang].final} <span id="final-score">${finalSc}</span>`;
         document.getElementById('ss-score-val').innerText = finalSc;
         document.getElementById('game-over').classList.add('active');
     }, 1000);
@@ -192,7 +170,7 @@ function loop() {
         feverTimer--;
         if (feverTimer <= 0) {
             feverMode = false; energy = 0; speed -= 3;
-            energyEl.innerText = `${i18n[currentLang].energy}0/5`; energyEl.classList.remove('fever');
+            energyEl.innerText = `energy: 0/5`; energyEl.classList.remove('fever');
         }
     }
 
@@ -235,8 +213,8 @@ function loop() {
                     energy++;
                     if (energy >= 5) {
                         feverMode = true; feverTimer = 300; speed += 3;
-                        energyEl.innerText = i18n[currentLang].fever; energyEl.classList.add('fever');
-                    } else { energyEl.innerText = `${i18n[currentLang].energy}${energy}/5`; }
+                        energyEl.innerText = "🔥 fever mode! 🔥"; energyEl.classList.add('fever');
+                    } else { energyEl.innerText = `energy: ${energy}/5`; }
                 }
                 coinSfx.currentTime = 0; coinSfx.play().catch(()=>{}); if(navigator.vibrate) navigator.vibrate(40);
                 createParticles(st.x + st.w/2, st.y + st.h/2, "#00ffff", 15);
