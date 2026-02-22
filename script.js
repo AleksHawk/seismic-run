@@ -115,13 +115,24 @@ wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' &&
 wrapper.addEventListener('mouseup', e => { stopThrust(); });
 
 function spawn() {
-    let type = Math.random() > 0.40 ? 'stone' : 'obstacle';
+    // 60 fps * 60 сек = 3600 кадрів (1 хвилина). 
+    // Базовий шанс на трубу - 20%. Кожну хвилину він росте на 15%, максимум до 75%.
+    let currentObstacleChance = Math.min(0.75, 0.20 + Math.floor(frameCount / 3600) * 0.15);
+    
+    let type = Math.random() > currentObstacleChance ? 'stone' : 'obstacle';
+
     if (type === 'obstacle') {
         let isTop = Math.random() > 0.5;
         let obsH = Math.random() * (h/2.5) + 40;
         obstacles.push({ x: w, w: 50, h: obsH, y: isTop ? p.ceilY : p.floorY - obsH });
     } else {
+        // Спавнимо перший камінець
         stones.push({ x: w, y: Math.random() * (h - 140) + 70, w: 45, h: 45, collected: false });
+        
+        // На початку гри є шанс 60% заспавнити одразу ДРУГИЙ камінець трохи далі
+        if (Math.random() > 0.40 && currentObstacleChance < 0.50) {
+            stones.push({ x: w + 65, y: Math.random() * (h - 140) + 70, w: 45, h: 45, collected: false });
+        }
     }
 }
 
@@ -179,7 +190,8 @@ function loop() {
         setTimeout(() => wrapper.style.boxShadow = "none", 300);
     }
 
-    if (isLive && frameCount % Math.max(20, 90 - Math.floor(speed*1.5)) === 0) spawn();
+    // Збільшено загальну частоту появи об'єктів (було 90, стало 70)
+    if (isLive && frameCount % Math.max(15, 70 - Math.floor(speed*1.5)) === 0) spawn();
 
     if (isLive) {
         if (isThrusting) { p.vy -= 0.6; createParticles(p.x + 10, p.y + p.h, '#ff4500', 2); } else { p.vy += 0.4; }
@@ -242,7 +254,6 @@ document.getElementById('btn-save').onclick = function() {
     });
 };
 
-// Оновлений текст для Twitter X
 document.getElementById('btn-x').onclick = function() {
     const txt = encodeURIComponent(`participating in a challenge from @AleksYastreb! 🚀\nmy record (${currentPlayerName}): ${Math.floor(score)} points 🪨\nmade with love for the @SeismicSys community ❤️\n\ntry to beat it: https://alekshawk.github.io/seismic-run/\n\ni pass the baton to: @`);
     window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
