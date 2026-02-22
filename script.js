@@ -37,7 +37,7 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
     };
 });
 
-// налаштування firebase (тут вставиш свої ключі, коли створиш базу)
+// налаштування firebase
 const firebaseConfig = {
   apiKey: "твоя-апі-ключ",
   authDomain: "твій-проект.firebaseapp.com",
@@ -52,7 +52,7 @@ if (firebaseConfig.apiKey !== "твоя-апі-ключ") {
     document.getElementById('text-lb-wait').innerText = "live syncing...";
 }
 
-// локальний рекорд як заглушка
+// локальний рекорд
 let bestLocalScore = localStorage.getItem('seismic_best_score') || 0;
 let bestLocalName = localStorage.getItem('seismic_best_name') || 'nobody';
 document.getElementById('best-name').innerText = bestLocalName;
@@ -70,8 +70,8 @@ let w, h;
 function resize() { w = wrapper.clientWidth; h = wrapper.clientHeight; canvas.width = w; canvas.height = h; }
 window.addEventListener('resize', resize); resize();
 
-// ПІДНЯВ СТАРТОВУ ШВИДКІСТЬ І ФІЗИКУ
-let isLive = false, score = 0, speed = 8.5;
+// ОРИГІНАЛЬНА ФІЗИКА І ШВИДКІСТЬ
+let isLive = false, score = 0, speed = 7.5;
 let energy = 0, feverMode = false, feverTimer = 0;
 let frameCount = 0, shakeTime = 0;
 let isThrusting = false;
@@ -94,7 +94,7 @@ function tryStartGame() {
 }
 
 function initGame() {
-    score = 0; speed = 8.5; energy = 0; feverMode = false; feverTimer = 0; frameCount = 0;
+    score = 0; speed = 7.5; energy = 0; feverMode = false; feverTimer = 0; frameCount = 0;
     obstacles = []; stones = []; particles = [];
     isThrusting = false; p.floorY = h - 30; p.ceilY = 30; p.y = p.floorY - p.h; p.vy = 0;
     scoreEl.innerText = score; energyEl.innerText = `energy: 0/5`; energyEl.classList.remove('fever');
@@ -116,23 +116,14 @@ wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' &&
 wrapper.addEventListener('mouseup', e => { stopThrust(); });
 
 function spawn() {
-    // ДИНАМІЧНИЙ СПАВН: кожні 15 секунд (900 кадрів) шанс на трубу росте на 15%
-    // Стартуємо з 20% труб (80% камінців)
-    let obstacleChance = Math.min(0.65, 0.20 + Math.floor(frameCount / 900) * 0.15);
-
-    let type = Math.random() > obstacleChance ? 'stone' : 'obstacle';
-
+    // 60% шанс на камінець, 40% на трубу
+    let type = Math.random() > 0.40 ? 'stone' : 'obstacle';
     if (type === 'obstacle') {
         let isTop = Math.random() > 0.5;
         let obsH = Math.random() * (h/2.5) + 40;
         obstacles.push({ x: w, w: 50, h: obsH, y: isTop ? p.ceilY : p.floorY - obsH });
     } else {
         stones.push({ x: w, y: Math.random() * (h - 140) + 70, w: 45, h: 45, collected: false });
-        
-        // Поки труб мало (перші 30 сек), є високий шанс спавну подвійного камінця!
-        if (obstacleChance < 0.40 && Math.random() > 0.4) {
-            stones.push({ x: w + 60, y: Math.random() * (h - 140) + 70, w: 45, h: 45, collected: false });
-        }
     }
 }
 
@@ -191,16 +182,15 @@ function loop() {
         setTimeout(() => wrapper.style.boxShadow = "none", 300);
     }
 
-    // Пришвидшений спавн об'єктів
-    if (isLive && frameCount % Math.max(15, 65 - Math.floor(speed*1.5)) === 0) spawn();
+    if (isLive && frameCount % Math.max(20, 90 - Math.floor(speed*1.5)) === 0) spawn();
 
     if (isLive) {
-        // РІЗКА ФІЗИКА (було 0.6 і 0.4, стало 0.85 і 0.55)
+        // ОРИГІНАЛЬНА ФІЗИКА (0.6 і 0.4)
         if (isThrusting) { 
-            p.vy -= 0.85; 
+            p.vy -= 0.6; 
             createParticles(p.x + 10, p.y + p.h, '#ff4500', 2); 
         } else { 
-            p.vy += 0.55; 
+            p.vy += 0.4; 
         }
         
         p.vy *= 0.92; p.y += p.vy;
