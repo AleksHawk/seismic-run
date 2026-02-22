@@ -5,20 +5,12 @@ const scoreEl = document.getElementById('score-val');
 const energyEl = document.getElementById('energy-val');
 const playerNameInput = document.getElementById('player-name');
 
-// Налаштування фізики з твого нового коду
-const THRUST = 3.2;
-const GRAVITY = 2.4;
-const DRAG = 0.93;
-const MAX_VY = 15;
-
 const rulesI18n = {
     en: { title: "rules:", r1: "hold space or touch screen to fly up", r2: "collect 5 stones to activate superpower", r3: "avoid red obstacles", r4: "in fever mode you are invincible!" },
     ua: { title: "правила:", r1: "затисни екран щоб летіти", r2: "збери 5 камінців для суперсили", r3: "уникай червоних труб", r4: "у fever mode ти безсмертний!" }
 };
 
-let currentLang = 'en';
 function setRulesLang(lang) {
-    currentLang = lang;
     document.getElementById('text-rules').innerText = rulesI18n[lang].title;
     document.getElementById('rules-list').innerHTML = `<li>${rulesI18n[lang].r1}</li><li>${rulesI18n[lang].r2}</li><li>${rulesI18n[lang].r3}</li><li>${rulesI18n[lang].r4}</li>`;
 }
@@ -38,8 +30,9 @@ let w, h;
 function resize() { w = wrapper.clientWidth; h = wrapper.clientHeight; canvas.width = w; canvas.height = h; }
 window.addEventListener('resize', resize); resize();
 
-let isLive = false, score = 0, speed = 8.0, energy = 0;
-let feverMode = false, feverTimer = 0, frameCount = 0, shakeTime = 0;
+// ПОВЕРНУТО СТАБІЛЬНІ НАЛАШТУВАННЯ
+let isLive = false, score = 0, speed = 7.5;
+let energy = 0, feverMode = false, feverTimer = 0, frameCount = 0, shakeTime = 0;
 let isThrusting = false, obstacles = [], stones = [], particles = [], currentPlayerName = "";
 
 const p = { x: 100, y: 0, w: 60, h: 60, vy: 0, floorY: 0, ceilY: 0 };
@@ -57,15 +50,14 @@ function tryStartGame() {
 }
 
 function initGame() {
-    score = 0; speed = 8.0; energy = 0; feverMode = false; feverTimer = 0; frameCount = 0;
+    score = 0; speed = 7.5; energy = 0; feverMode = false; feverTimer = 0; frameCount = 0;
     obstacles = []; stones = []; particles = []; p.vy = 0;
-    p.floorY = h - 30; p.ceilY = 30; p.y = h/2;
-    scoreEl.innerText = "0"; energyEl.innerText = "energy: 0/5";
+    p.floorY = h - 30; p.ceilY = 30; p.y = h - 100;
+    scoreEl.innerText = "0"; energyEl.innerText = "energy: 0/5"; energyEl.classList.remove('fever');
     isLive = true;
     requestAnimationFrame(loop);
 }
 
-// Керування
 window.addEventListener('keydown', e => { if(e.code === 'Space') isThrusting = true; });
 window.addEventListener('keyup', e => { if(e.code === 'Space') isThrusting = false; });
 wrapper.addEventListener('touchstart', e => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') isThrusting = true; }, {passive: true});
@@ -74,7 +66,7 @@ wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' &&
 wrapper.addEventListener('mouseup', () => isThrusting = false);
 
 function spawn() {
-    let type = Math.random() > 0.40 ? 'stone' : 'obstacle';
+    let type = Math.random() > 0.45 ? 'stone' : 'obstacle';
     if (type === 'obstacle') {
         let obsH = Math.random() * (h/2.5) + 40;
         obstacles.push({ x: w, w: 50, h: obsH, y: Math.random() > 0.5 ? p.ceilY : p.floorY - obsH });
@@ -93,38 +85,33 @@ function die() {
 }
 
 function loop() {
-    ctx.save();
-    if (shakeTime > 0) { ctx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*10); shakeTime--; }
+    if (shakeTime > 0) { ctx.save(); ctx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*10); shakeTime--; } else { ctx.save(); }
     
-    ctx.fillStyle = feverMode ? "rgba(40, 0, 0, 0.6)" : "#0a0014";
+    ctx.fillStyle = feverMode ? "rgba(40, 0, 0, 0.5)" : "#0a0014";
     ctx.fillRect(0, 0, w, h);
 
     if (isLive) {
         frameCount++;
-        if (isThrusting) p.vy -= THRUST; else p.vy += GRAVITY;
-        p.vy *= DRAG;
-        p.vy = Math.max(-MAX_VY, Math.min(MAX_VY, p.vy));
-        p.y += p.vy;
+        if (isThrusting) p.vy -= 0.6; else p.vy += 0.4;
+        p.vy *= 0.92; p.y += p.vy;
 
         if (p.y < p.ceilY || p.y + p.h > p.floorY) die();
-        if (frameCount % 240 === 0) speed += 1.5;
-        if (frameCount % 60 === 0) spawn();
+        if (frameCount % 240 === 0) speed += 2.0;
+        if (frameCount % Math.max(20, 90 - Math.floor(speed*1.5)) === 0) spawn();
 
         score += feverMode ? 0.3 : 0.1;
         scoreEl.innerText = Math.floor(score);
 
-        // Малюємо Рокі з нахилом
+        // Малюємо Рокі
         ctx.save();
-        let tilt = p.vy * 0.04;
-        ctx.translate(p.x + p.w/2, p.y + p.h/2);
-        ctx.rotate(Math.max(-0.6, Math.min(0.6, tilt)));
-        ctx.drawImage(rockyImg, -p.w/2, -p.h/2, p.w, p.h);
+        ctx.shadowBlur = feverMode ? 25 : 10;
+        ctx.shadowColor = feverMode ? "#ff4500" : "#ffaa00";
+        ctx.drawImage(rockyImg, p.x, p.y, p.w, p.h);
         ctx.restore();
 
-        // Об'єкти
         obstacles.forEach((obs, i) => {
             obs.x -= speed;
-            ctx.fillStyle = "red"; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+            ctx.fillStyle = "#ff0000"; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
             if (p.x < obs.x + obs.w && p.x + p.w > obs.x && p.y < obs.y + obs.h && p.y + p.h > obs.y) {
                 if (feverMode) { obstacles.splice(i, 1); score += 50; } else die();
             }
@@ -136,26 +123,29 @@ function loop() {
                 ctx.drawImage(stoneImg, st.x, st.y, st.w, st.h);
                 if (p.x < st.x + st.w && p.x + p.w > st.x && p.y < st.y + st.h && p.y + p.h > st.y) {
                     st.collected = true; energy++;
-                    if (energy >= 5) { feverMode = true; feverTimer = 300; energy = 0; speed += 2; energyEl.classList.add('fever'); }
-                    energyEl.innerText = feverMode ? "🔥 FEVER! 🔥" : `energy: ${energy}/5`;
+                    if (energy >= 5) { 
+                        feverMode = true; feverTimer = 300; energy = 0; speed += 3; 
+                        energyEl.innerText = "🔥 FEVER! 🔥"; energyEl.classList.add('fever'); 
+                    } else { energyEl.innerText = `energy: ${energy}/5`; }
                 }
             }
         });
 
-        if (feverMode) { feverTimer--; if (feverTimer <= 0) { feverMode = false; speed -= 2; energyEl.classList.remove('fever'); } }
+        if (feverMode) { feverTimer--; if (feverTimer <= 0) { feverMode = false; speed -= 3; energyEl.innerText = "energy: 0/5"; energyEl.classList.remove('fever'); } }
     }
 
     ctx.restore();
-    if (isLive) requestAnimationFrame(loop);
+    if (isLive || shakeTime > 0) requestAnimationFrame(loop);
 }
 
 document.getElementById('btn-start').onclick = tryStartGame;
 document.getElementById('btn-restart').onclick = () => { document.getElementById('game-over').classList.remove('active'); initGame(); };
 document.getElementById('btn-save').onclick = () => { 
-    html2canvas(document.getElementById('ss-export')).then(c => {
-        let l = document.createElement('a'); l.download = 'seismic.png'; l.href = c.toDataURL(); l.click();
+    html2canvas(document.getElementById('ss-export'), {backgroundColor: "#05000a"}).then(c => {
+        let l = document.createElement('a'); l.download = 'seismic_record.png'; l.href = c.toDataURL(); l.click();
     });
 };
 document.getElementById('btn-x').onclick = () => {
-    window.open(`https://twitter.com/intent/tweet?text=I scored ${Math.floor(score)} in Seismic Run! @SeismicSys community ❤️`, '_blank');
+    const txt = encodeURIComponent(`my record in Seismic Run: ${Math.floor(score)} points! 🚀\nmade with love for the @SeismicSys community ❤️\n\ntry it: https://alekshawk.github.io/seismic-run/`);
+    window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
 };
