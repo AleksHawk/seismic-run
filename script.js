@@ -186,13 +186,13 @@ function loop() {
     if (isLive) {
         // УЛЬТРА-РІЗКА ФІЗИКА РОКІ
         if (isThrusting) { 
-            p.vy -= 1.8; // Тяга джетпака (була 0.6)
-            createParticles(p.x + 10, p.y + p.h, '#ff4500', 2); 
+            p.vy -= 2.8; // Тяга джетпака (була 0.6, потім 1.8, тепер 2.8)
+            createParticles(p.x + 10, p.y + p.h, '#ff4500', 3); 
         } else { 
-            p.vy += 1.2; // Гравітація (була 0.4)
+            p.vy += 2.2; // Гравітація (була 0.4, потім 1.2, тепер 2.2)
         }
         
-        p.vy *= 0.85; // Опір повітря (був 0.92) - зупиняється миттєво
+        p.vy *= 0.88; // Опір повітря (був 0.92, потім 0.85, тепер 0.88) - зупиняється миттєво
         p.y += p.vy;
         
         if (p.y + p.h > p.floorY) { p.y = p.floorY - p.h; p.vy = 0; } else if (p.y < p.ceilY) { p.y = p.ceilY; p.vy = 0; }
@@ -257,3 +257,4 @@ document.getElementById('btn-x').onclick = function() {
     const txt = encodeURIComponent(`participating in a challenge from @AleksYastreb! 🚀\nmy record (${currentPlayerName}): ${Math.floor(score)} points 🪨\nmade with love for the @SeismicSys community ❤️\n\ntry to beat it: https://alekshawk.github.io/seismic-run/\n\ni pass the baton to: @`);
     window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
 };
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
