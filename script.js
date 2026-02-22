@@ -6,6 +6,12 @@ const comboEl = document.getElementById('combo-val');
 const playerNameInput = document.getElementById('player-name');
 const inputGroup = document.querySelector('.input-group');
 
+// локальний рекорд
+let bestLocalScore = localStorage.getItem('seismic_best_score') || 0;
+let bestLocalName = localStorage.getItem('seismic_best_name') || 'nobody';
+document.getElementById('best-name').innerText = bestLocalName;
+document.getElementById('best-score').innerText = bestLocalScore;
+
 // аудіо
 const bgMusic = new Audio('https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3');
 bgMusic.loop = true; bgMusic.volume = 0.4;
@@ -25,7 +31,7 @@ window.addEventListener('resize', resize);
 resize();
 
 // змінні гри
-let isLive = false, score = 0, speed = 6, combo = 0, feverMode = false;
+let isLive = false, score = 0, speed = 7.5, combo = 0, feverMode = false;
 let frameCount = 0, shakeTime = 0;
 let isThrusting = false;
 let obstacles = [], stones = [], particles = [];
@@ -33,29 +39,25 @@ let currentPlayerName = "";
 
 const p = { x: 100, y: 0, w: 60, h: 60, vy: 0, floorY: 0, ceilY: 0 };
 
-// ФУНКЦІЯ СТАРТУ (з перевіркою ніка)
 function tryStartGame() {
     const name = playerNameInput.value.trim();
     if (name === "") {
-        // Якщо нік пустий - показуємо помилку
         playerNameInput.classList.add('input-error');
         inputGroup.classList.add('has-error');
-        // Прибираємо клас помилки через секунду
         setTimeout(() => {
             playerNameInput.classList.remove('input-error');
             inputGroup.classList.remove('has-error');
         }, 1000);
-        return; // Зупиняємо старт гри
+        return; 
     }
 
-    // Якщо все ок - починаємо
     currentPlayerName = name;
     document.getElementById('menu').classList.remove('active');
     initGame();
 }
 
 function initGame() {
-    score = 0; speed = 6; combo = 0; feverMode = false; frameCount = 0;
+    score = 0; speed = 7.5; combo = 0; feverMode = false; frameCount = 0;
     obstacles = []; stones = []; particles = [];
     isThrusting = false;
     p.floorY = h - 30; p.ceilY = 30;
@@ -63,7 +65,6 @@ function initGame() {
     scoreEl.innerText = score; updateCombo();
     isLive = true;
     
-    // Оновлюємо текст на скріншоті
     document.getElementById('ss-foot-text').innerText = `can you beat ${currentPlayerName}'s score?`;
 
     bgMusic.currentTime = 0; bgMusic.play().catch(()=>{});
@@ -131,6 +132,16 @@ function die() {
     if(navigator.vibrate) navigator.vibrate([300, 100, 300]);
     createParticles(p.x + p.w/2, p.y + p.h/2, '#ff0000', 50);
     
+    // зберігаємо найкращий результат
+    if (Math.floor(score) > bestLocalScore) {
+        bestLocalScore = Math.floor(score);
+        bestLocalName = currentPlayerName;
+        localStorage.setItem('seismic_best_score', bestLocalScore);
+        localStorage.setItem('seismic_best_name', bestLocalName);
+        document.getElementById('best-name').innerText = bestLocalName;
+        document.getElementById('best-score').innerText = bestLocalScore;
+    }
+
     setTimeout(() => {
         document.getElementById('final-score').innerText = Math.floor(score);
         document.getElementById('ss-score-val').innerText = Math.floor(score);
@@ -162,9 +173,9 @@ function loop() {
     if (!isLive && particles.length === 0) { ctx.restore(); return; }
     if (isLive) frameCount++;
 
-    // хардкорне прискорення кожні 5 секунд
-    if (isLive && frameCount % 300 === 0) {
-        speed += 1.5;
+    // хардкорне прискорення кожні 4 секунди
+    if (isLive && frameCount % 240 === 0) {
+        speed += 2.0;
         wrapper.style.boxShadow = "inset 0 0 60px #ff0000";
         setTimeout(() => wrapper.style.boxShadow = "none", 300);
     }
@@ -205,10 +216,8 @@ function loop() {
         ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
         ctx.shadowBlur = 0;
 
-        // перевірка зіткнення
         if (isLive && p.x + 10 < obs.x + obs.w && p.x + p.w - 10 > obs.x && p.y + 10 < obs.y + obs.h && p.y + p.h - 10 > obs.y) {
             if (feverMode) {
-                // розбиваємо трубу
                 score += 50;
                 hitSfx.currentTime = 0; hitSfx.play().catch(()=>{});
                 shakeTime = 15;
@@ -272,7 +281,6 @@ function loop() {
     if (isLive || shakeTime > 0 || particles.length > 0) requestAnimationFrame(loop);
 }
 
-// Використовуємо нову функцію перевірки
 document.getElementById('btn-start').onclick = tryStartGame;
 document.getElementById('btn-restart').onclick = () => { document.getElementById('game-over').classList.remove('active'); initGame(); };
 
@@ -290,7 +298,6 @@ document.getElementById('btn-save').onclick = function() {
 };
 
 document.getElementById('btn-x').onclick = function() {
-    // Використовуємо введений нікнейм
-    const txt = encodeURIComponent(`запускаю новий челендж seismic run! 🚀\nмій рекорд (${currentPlayerName}): ${Math.floor(score)} балів 🪨\n\nспробуй побити: https://alekshawk.github.io/seismic-run/\n\nа я передаю естафету: @IMenlikovaOG @juliapiekh @garbar27`);
+    const txt = encodeURIComponent(`participating in a challenge from @AleksYastreb! 🚀\nmy record (${currentPlayerName}): ${Math.floor(score)} points 🪨\n\ntry to beat it: https://alekshawk.github.io/seismic-run/\n\ni pass the baton to: @`);
     window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
 };
