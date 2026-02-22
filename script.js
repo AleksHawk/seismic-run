@@ -78,9 +78,9 @@ function stopThrust() { isThrusting = false; }
 window.addEventListener('keydown', e => { if(e.code === 'Space') startThrust(); });
 window.addEventListener('keyup', e => { if(e.code === 'Space') stopThrust(); });
 
-wrapper.addEventListener('touchstart', e => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') startThrust(); }, {passive: true});
+wrapper.addEventListener('touchstart', e => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'A') startThrust(); }, {passive: true});
 wrapper.addEventListener('touchend', e => { stopThrust(); }, {passive: true});
-wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') startThrust(); });
+wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'A') startThrust(); });
 wrapper.addEventListener('mouseup', e => { stopThrust(); });
 
 function spawn() {
@@ -132,7 +132,6 @@ function die() {
     if(navigator.vibrate) navigator.vibrate([300, 100, 300]);
     createParticles(p.x + p.w/2, p.y + p.h/2, '#ff0000', 50);
     
-    // зберігаємо найкращий результат
     if (Math.floor(score) > bestLocalScore) {
         bestLocalScore = Math.floor(score);
         bestLocalName = currentPlayerName;
@@ -173,7 +172,6 @@ function loop() {
     if (!isLive && particles.length === 0) { ctx.restore(); return; }
     if (isLive) frameCount++;
 
-    // хардкорне прискорення кожні 4 секунди
     if (isLive && frameCount % 240 === 0) {
         speed += 2.0;
         wrapper.style.boxShadow = "inset 0 0 60px #ff0000";
@@ -182,7 +180,6 @@ function loop() {
 
     if (isLive && frameCount % Math.max(20, 90 - Math.floor(speed*1.5)) === 0) spawn();
 
-    // фізика джетпака
     if (isLive) {
         if (isThrusting) {
             p.vy -= 0.6; 
@@ -206,7 +203,6 @@ function loop() {
         if (feverMode) createParticles(p.x, p.y + p.h/2, '#ffaa00', 1);
     }
 
-    // перешкоди
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let obs = obstacles[i];
         if (isLive) obs.x -= speed;
@@ -232,7 +228,6 @@ function loop() {
         if (obs.x + obs.w < 0) obstacles.splice(i, 1);
     }
 
-    // камінці
     for (let i = stones.length - 1; i >= 0; i--) {
         let st = stones[i];
         if (isLive) st.x -= speed;
@@ -259,7 +254,6 @@ function loop() {
         if (st.x + st.w < 0) stones.splice(i, 1);
     }
 
-    // частинки
     for (let i = particles.length - 1; i >= 0; i--) {
         let pt = particles[i];
         pt.x += pt.vx; pt.y += pt.vy; pt.life--;
@@ -268,7 +262,6 @@ function loop() {
         if (pt.life <= 0) particles.splice(i, 1);
     }
 
-    // гравець
     if (isLive) {
         ctx.save();
         ctx.shadowBlur = feverMode ? 25 : 10; 
