@@ -70,7 +70,6 @@ let w, h;
 function resize() { w = wrapper.clientWidth; h = wrapper.clientHeight; canvas.width = w; canvas.height = h; }
 window.addEventListener('resize', resize); resize();
 
-// ПОВЕРНУТО ЖОРСТКУ ШВИДКІСТЬ
 let isLive = false, score = 0, speed = 7.5;
 let energy = 0, feverMode = false, feverTimer = 0;
 let frameCount = 0, shakeTime = 0;
@@ -116,8 +115,7 @@ wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' &&
 wrapper.addEventListener('mouseup', e => { stopThrust(); });
 
 function spawn() {
-    // ПОВЕРНУТО ОРИГІНАЛЬНИЙ БАЛАНС (більше труб)
-    let type = Math.random() > 0.45 ? 'stone' : 'obstacle';
+    let type = Math.random() > 0.40 ? 'stone' : 'obstacle';
     if (type === 'obstacle') {
         let isTop = Math.random() > 0.5;
         let obsH = Math.random() * (h/2.5) + 40;
@@ -176,9 +174,8 @@ function loop() {
         }
     }
 
-    // ПОВЕРНУТО ХАРДКОРНЕ ПРИСКОРЕННЯ (+2.0 кожні 4 секунди)
     if (isLive && frameCount % 240 === 0) {
-        speed += 2.0; wrapper.style.boxShadow = "inset 0 0 60px #ff0000";
+        speed += 1.5; wrapper.style.boxShadow = "inset 0 0 60px #ff0000";
         setTimeout(() => wrapper.style.boxShadow = "none", 300);
     }
 
@@ -245,6 +242,7 @@ document.getElementById('btn-save').onclick = function() {
     });
 };
 
+// Оновлений текст для Twitter X
 document.getElementById('btn-x').onclick = function() {
     const txt = encodeURIComponent(`participating in a challenge from @AleksYastreb! 🚀\nmy record (${currentPlayerName}): ${Math.floor(score)} points 🪨\nmade with love for the @SeismicSys community ❤️\n\ntry to beat it: https://alekshawk.github.io/seismic-run/\n\ni pass the baton to: @`);
     window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
