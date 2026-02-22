@@ -2,23 +2,20 @@ const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const wrapper = document.getElementById('game-wrapper');
 const scoreEl = document.getElementById('score-val');
-const comboEl = document.getElementById('combo-val');
+const energyEl = document.getElementById('energy-val');
 const playerNameInput = document.getElementById('player-name');
 const inputGroup = document.querySelector('.input-group');
 
-// локальний рекорд
 let bestLocalScore = localStorage.getItem('seismic_best_score') || 0;
 let bestLocalName = localStorage.getItem('seismic_best_name') || 'nobody';
 document.getElementById('best-name').innerText = bestLocalName;
 document.getElementById('best-score').innerText = bestLocalScore;
 
-// аудіо
 const bgMusic = new Audio('https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3');
 bgMusic.loop = true; bgMusic.volume = 0.4;
 const coinSfx = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3');
 const hitSfx = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-explosion-with-glass-debris-1701.mp3');
 
-// картинки
 const rockyImg = new Image(); rockyImg.src = 'rocky.png';
 const stoneImg = new Image(); stoneImg.src = 'stone.png';
 
@@ -31,7 +28,8 @@ window.addEventListener('resize', resize);
 resize();
 
 // змінні гри
-let isLive = false, score = 0, speed = 7.5, combo = 0, feverMode = false;
+let isLive = false, score = 0, speed = 7.5;
+let energy = 0, feverMode = false, feverTimer = 0;
 let frameCount = 0, shakeTime = 0;
 let isThrusting = false;
 let obstacles = [], stones = [], particles = [];
@@ -57,12 +55,14 @@ function tryStartGame() {
 }
 
 function initGame() {
-    score = 0; speed = 7.5; combo = 0; feverMode = false; frameCount = 0;
+    score = 0; speed = 7.5; energy = 0; feverMode = false; feverTimer = 0; frameCount = 0;
     obstacles = []; stones = []; particles = [];
     isThrusting = false;
     p.floorY = h - 30; p.ceilY = 30;
     p.y = p.floorY - p.h; p.vy = 0;
-    scoreEl.innerText = score; updateCombo();
+    scoreEl.innerText = score; 
+    energyEl.innerText = `energy: 0/5`;
+    energyEl.classList.remove('fever');
     isLive = true;
     
     document.getElementById('ss-foot-text').innerText = `can you beat ${currentPlayerName}'s score?`;
@@ -71,7 +71,6 @@ function initGame() {
     requestAnimationFrame(loop);
 }
 
-// управління джетпаком
 function startThrust() { if (isLive) isThrusting = true; }
 function stopThrust() { isThrusting = false; }
 
@@ -84,7 +83,8 @@ wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' &&
 wrapper.addEventListener('mouseup', e => { stopThrust(); });
 
 function spawn() {
-    let type = Math.random() > 0.45 ? 'stone' : 'obstacle';
+    // Збільшено шанс на камінець (60% камінець, 40% труба)
+    let type = Math.random() > 0.40 ? 'stone' : 'obstacle';
     
     if (type === 'obstacle') {
         let isTop = Math.random() > 0.5;
@@ -109,19 +109,6 @@ function createParticles(x, y, color, count) {
             vy: (Math.random() - 0.5) * 15,
             life: Math.random() * 20 + 10, color: color
         });
-    }
-}
-
-function updateCombo() {
-    comboEl.innerText = `combo: ${combo}`;
-    if (combo >= 5) {
-        if (!feverMode) speed += 3; 
-        feverMode = true;
-        comboEl.classList.add('fever');
-    } else {
-        if (feverMode) speed -= 3;
-        feverMode = false;
-        comboEl.classList.remove('fever');
     }
 }
 
@@ -172,8 +159,21 @@ function loop() {
     if (!isLive && particles.length === 0) { ctx.restore(); return; }
     if (isLive) frameCount++;
 
+    // Логіка Fever Mode (Триває ~5 секунд при 60fps)
+    if (feverMode) {
+        feverTimer--;
+        if (feverTimer <= 0) {
+            feverMode = false;
+            energy = 0;
+            speed -= 3; // Повертаємо нормальну швидкість
+            energyEl.innerText = `energy: 0/5`;
+            energyEl.classList.remove('fever');
+        }
+    }
+
+    // Прискорення гри
     if (isLive && frameCount % 240 === 0) {
-        speed += 2.0;
+        speed += 1.5;
         wrapper.style.boxShadow = "inset 0 0 60px #ff0000";
         setTimeout(() => wrapper.style.boxShadow = "none", 300);
     }
@@ -240,15 +240,24 @@ function loop() {
             if (isLive && p.x < st.x + st.w && p.x + p.w > st.x && p.y < st.y + st.h && p.y + p.h > st.y) {
                 st.collected = true;
                 score += feverMode ? 40 : 15;
-                combo++; updateCombo();
+                
+                // Накопичення енергії
+                if (!feverMode) {
+                    energy++;
+                    if (energy >= 5) {
+                        feverMode = true;
+                        feverTimer = 300; // 5 секунд суперсили
+                        speed += 3; // Тимчасове прискорення
+                        energyEl.innerText = "🔥 FEVER MODE! 🔥";
+                        energyEl.classList.add('fever');
+                    } else {
+                        energyEl.innerText = `energy: ${energy}/5`;
+                    }
+                }
+
                 coinSfx.currentTime = 0; coinSfx.play().catch(()=>{});
                 if(navigator.vibrate) navigator.vibrate(40);
                 createParticles(st.x + st.w/2, st.y + st.h/2, "#00ffff", 15);
-            }
-            
-            if (isLive && st.x + st.w < p.x && !st.collected) {
-                combo = 0; updateCombo();
-                st.collected = true; 
             }
         }
         if (st.x + st.w < 0) stones.splice(i, 1);
