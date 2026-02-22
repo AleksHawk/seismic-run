@@ -1,187 +1,238 @@
-const canvas = document.getElementById('bg-canvas');
+const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const wrapper = document.getElementById('game-wrapper');
-const player = document.getElementById('player');
-const entitiesLayer = document.getElementById('entities');
-const scoreVal = document.getElementById('score-val');
-const finalScore = document.getElementById('final-score');
-const ssScoreVal = document.getElementById('ss-score-val');
-const menu = document.getElementById('menu');
-const gameOver = document.getElementById('game-over');
+const scoreEl = document.getElementById('score-val');
+const comboEl = document.getElementById('combo-val');
+
+// аудіо
+const bgMusic = new Audio('https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3');
+bgMusic.loop = true; bgMusic.volume = 0.4;
+const coinSfx = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3');
+const hitSfx = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-explosion-with-glass-debris-1701.mp3');
+
+// картинки
+const rockyImg = new Image(); rockyImg.src = 'rocky.png';
+const stoneImg = new Image(); stoneImg.src = 'stone.png';
 
 let w, h;
 function resize() {
-    w = wrapper.clientWidth;
-    h = wrapper.clientHeight;
-    canvas.width = w;
-    canvas.height = h;
+    w = wrapper.clientWidth; h = wrapper.clientHeight;
+    canvas.width = w; canvas.height = h;
 }
 window.addEventListener('resize', resize);
 resize();
 
-let lane = 1;
-let score = 0;
-let speed = 8;
-let isPlaying = false;
-let frameCount = 0;
-let entities = [];
-let particles = [];
+// змінні гри
+let isLive = false, score = 0, speed = 8, combo = 0, feverMode = false;
+let frameCount = 0, shakeTime = 0;
+let obstacles = [], stones = [], particles = [];
 
-function getLaneX(l) {
-    const step = w / 3;
-    if (l === 0) return (step / 2);
-    if (l === 1) return (step * 1.5);
-    return (step * 2.5);
+const p = { x: 100, y: 0, w: 70, h: 70, vy: 0, dir: 1, floorY: 0, ceilY: 0 };
+
+function initGame() {
+    score = 0; speed = 8; combo = 0; feverMode = false; frameCount = 0;
+    obstacles = []; stones = []; particles = [];
+    p.floorY = h - 40; p.ceilY = 40;
+    p.y = p.floorY - p.h; p.vy = 0; p.dir = 1;
+    scoreEl.innerText = score; updateCombo();
+    isLive = true;
+    bgMusic.currentTime = 0; bgMusic.play().catch(()=>{});
+    requestAnimationFrame(loop);
 }
 
-function updatePlayer() {
-    const targetX = getLaneX(lane);
-    const offset = targetX - (w / 2);
-    player.style.transform = `translateX(${offset}px)`;
+function flipGravity() {
+    if (!isLive) return;
+    p.dir *= -1;
+    p.vy = 0; // миттєвий ривок
+    createParticles(p.x + p.w/2, p.y + p.h/2, '#fff', 10);
 }
+
+// управління
+window.addEventListener('keydown', e => { if(e.code === 'Space') flipGravity(); });
+wrapper.addEventListener('touchstart', e => { flipGravity(); }, {passive: true});
+wrapper.addEventListener('mousedown', e => { flipGravity(); });
 
 function spawn() {
-    const l = Math.floor(Math.random() * 3);
-    const isStone = Math.random() > 0.35;
-    const el = document.createElement('div');
-    el.className = `entity ${isStone ? 'stone' : 'obstacle'}`;
-    entitiesLayer.appendChild(el);
-
-    entities.push({ el: el, lane: l, y: -100, type: isStone ? 'stone' : 'obstacle' });
-}
-
-function createParticles(x, y, color) {
-    for (let i = 0; i < 25; i++) {
-        particles.push({
-            x: x, y: y,
-            vx: (Math.random() - 0.5) * 10,
-            vy: (Math.random() - 0.5) * 10,
-            life: 30,
-            color: color
+    let type = Math.random() > 0.5 ? 'stone' : 'obstacle';
+    let isCeil = Math.random() > 0.5;
+    
+    if (type === 'obstacle') {
+        let obsH = Math.random() * 40 + 40;
+        obstacles.push({
+            x: w, w: 50, h: obsH,
+            y: isCeil ? p.ceilY : p.floorY - obsH,
+            passed: false
+        });
+    } else {
+        stones.push({
+            x: w, y: Math.random() * (h - 160) + 80,
+            w: 45, h: 45, collected: false
         });
     }
 }
 
-function loop() {
-    if (!isPlaying) return;
-    frameCount++;
+function createParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x: x, y: y,
+            vx: (Math.random() - 0.5) * 15,
+            vy: (Math.random() - 0.5) * 15,
+            life: Math.random() * 20 + 10, color: color
+        });
+    }
+}
 
-    ctx.fillStyle = "rgba(10, 0, 20, 0.5)";
+function updateCombo() {
+    comboEl.innerText = `combo: ${combo}`;
+    if (combo >= 5) {
+        if (!feverMode) speed += 3; // ривок швидкості
+        feverMode = true;
+        comboEl.classList.add('fever');
+    } else {
+        if (feverMode) speed -= 3;
+        feverMode = false;
+        comboEl.classList.remove('fever');
+    }
+}
+
+function die() {
+    isLive = false; shakeTime = 20;
+    hitSfx.currentTime = 0; hitSfx.play().catch(()=>{});
+    bgMusic.pause();
+    if(navigator.vibrate) navigator.vibrate([300, 100, 300]);
+    createParticles(p.x + p.w/2, p.y + p.h/2, '#ff0000', 50);
+    
+    setTimeout(() => {
+        document.getElementById('final-score').innerText = Math.floor(score);
+        document.getElementById('ss-score-val').innerText = Math.floor(score);
+        document.getElementById('game-over').classList.add('active');
+    }, 1000);
+}
+
+function loop() {
+    if (shakeTime > 0) {
+        ctx.save();
+        ctx.translate((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
+        shakeTime--;
+    } else {
+        ctx.save();
+    }
+
+    // малюємо фон зі шлейфом
+    ctx.fillStyle = feverMode ? "rgba(30, 0, 0, 0.4)" : "rgba(10, 0, 20, 0.4)";
     ctx.fillRect(0, 0, w, h);
 
+    // підлога і стеля
     ctx.fillStyle = "#ff4500";
-    for (let i = 0; i < 20; i++) {
-        ctx.fillRect(Math.random() * w, Math.random() * h, 2, 20 * (speed / 8));
+    ctx.fillRect(0, p.ceilY - 5, w, 5);
+    ctx.fillRect(0, p.floorY, w, 5);
+    
+    // speed lines
+    ctx.fillStyle = feverMode ? "#ffaa00" : "#00ffff";
+    for(let i=0; i<5; i++) {
+        ctx.fillRect(Math.random()*w, Math.random()*h, Math.random()*100+50, 2);
     }
 
-    for (let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i];
-        p.x += p.vx;
+    if (!isLive && particles.length === 0) { ctx.restore(); return; }
+    if (isLive) frameCount++;
+
+    // спавн
+    if (isLive && frameCount % Math.max(30, 80 - Math.floor(speed*2)) === 0) spawn();
+
+    // фізика гравця
+    if (isLive) {
+        p.vy += 1.5 * p.dir; // сильна гравітація
         p.y += p.vy;
-        p.life--;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-        ctx.fill();
-        if (p.life <= 0) particles.splice(i, 1);
+        
+        if (p.dir === 1 && p.y + p.h > p.floorY) {
+            p.y = p.floorY - p.h; p.vy = 0;
+        } else if (p.dir === -1 && p.y < p.ceilY) {
+            p.y = p.ceilY; p.vy = 0;
+        }
+
+        score += feverMode ? 0.3 : 0.1;
+        scoreEl.innerText = Math.floor(score);
+        
+        if (feverMode) createParticles(p.x, p.y + p.h/2, '#ff4500', 1);
     }
 
-    if (frameCount % 600 === 0) {
-        speed += 1.5;
-        wrapper.style.boxShadow = "inset 0 0 60px #ff0000";
-        setTimeout(() => wrapper.style.boxShadow = "none", 300);
+    // малюємо перешкоди
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+        let obs = obstacles[i];
+        if (isLive) obs.x -= speed;
+        
+        ctx.fillStyle = "#ff0000";
+        ctx.shadowBlur = 15; ctx.shadowColor = "#ff0000";
+        ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+        ctx.shadowBlur = 0;
+
+        if (isLive && p.x < obs.x + obs.w && p.x + p.w > obs.x && p.y < obs.y + obs.h && p.y + p.h > obs.y) {
+            die();
+        }
+        if (obs.x + obs.w < 0) obstacles.splice(i, 1);
     }
 
-    let spawnRate = Math.max(20, 70 - (speed * 1.5));
-    if (frameCount % Math.floor(spawnRate) === 0) spawn();
-
-    score += 0.15;
-    scoreVal.innerText = Math.floor(score);
-
-    const playerY = h - 170;
-
-    for (let i = entities.length - 1; i >= 0; i--) {
-        let ent = entities[i];
-        ent.y += speed;
-        const xOffset = getLaneX(ent.lane) - (w / 2);
-        ent.el.style.transform = `translate3d(${xOffset}px, ${ent.y}px, 0)`;
-
-        if (ent.lane === lane && ent.y > playerY && ent.y < playerY + 80) {
-            const px = getLaneX(ent.lane);
-            if (ent.type === 'stone') {
-                score += 20;
-                createParticles(px, playerY + 45, "#00ffff");
-                ent.el.remove();
-                entities.splice(i, 1);
-                continue;
-            } else {
-                createParticles(px, playerY + 45, "#ff0000");
-                endGame();
-                return;
+    // малюємо камінці
+    for (let i = stones.length - 1; i >= 0; i--) {
+        let st = stones[i];
+        if (isLive) st.x -= speed;
+        
+        if (!st.collected) {
+            ctx.shadowBlur = 20; ctx.shadowColor = "#00ffff";
+            ctx.drawImage(stoneImg, st.x, st.y, st.w, st.h);
+            ctx.shadowBlur = 0;
+            
+            if (isLive && p.x < st.x + st.w && p.x + p.w > st.x && p.y < st.y + st.h && p.y + p.h > st.y) {
+                st.collected = true;
+                score += feverMode ? 50 : 20;
+                combo++; updateCombo();
+                coinSfx.currentTime = 0; coinSfx.play().catch(()=>{});
+                if(navigator.vibrate) navigator.vibrate(50);
+                createParticles(st.x + st.w/2, st.y + st.h/2, "#00ffff", 20);
+            }
+            
+            // скидання комбо якщо пропустив камінь
+            if (isLive && st.x + st.w < p.x && !st.collected) {
+                combo = 0; updateCombo();
+                st.collected = true; // щоб не скидало постійно
             }
         }
-
-        if (ent.y > h + 100) {
-            ent.el.remove();
-            entities.splice(i, 1);
-        }
+        if (st.x + st.w < 0) stones.splice(i, 1);
     }
 
-    requestAnimationFrame(loop);
+    // малюємо частинки
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let pt = particles[i];
+        pt.x += pt.vx; pt.y += pt.vy; pt.life--;
+        ctx.fillStyle = pt.color;
+        ctx.fillRect(pt.x, pt.y, 4, 4);
+        if (pt.life <= 0) particles.splice(i, 1);
+    }
+
+    // малюємо гравця (перевернутого якщо на стелі)
+    if (isLive) {
+        ctx.save();
+        ctx.translate(p.x + p.w/2, p.y + p.h/2);
+        if (p.dir === -1) ctx.scale(1, -1);
+        ctx.shadowBlur = feverMode ? 30 : 15; 
+        ctx.shadowColor = feverMode ? "#ff4500" : "#ffaa00";
+        ctx.drawImage(rockyImg, -p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+    }
+
+    ctx.restore();
+    if (isLive || shakeTime > 0 || particles.length > 0) requestAnimationFrame(loop);
 }
 
-function startGame() {
-    score = 0;
-    speed = 8;
-    frameCount = 0;
-    lane = 1;
-    isPlaying = true;
-    scoreVal.innerText = 0;
-    menu.classList.remove('active');
-    gameOver.classList.remove('active');
-    
-    entities.forEach(ent => ent.el.remove());
-    entities = [];
-    particles = [];
-    
-    updatePlayer();
-    requestAnimationFrame(loop);
-}
-
-function endGame() {
-    isPlaying = false;
-    finalScore.innerText = Math.floor(score);
-    ssScoreVal.innerText = Math.floor(score);
-    if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    gameOver.classList.add('active');
-}
-
-window.addEventListener('keydown', e => {
-    if (!isPlaying) return;
-    if (e.key === 'ArrowLeft' && lane > 0) lane--;
-    if (e.key === 'ArrowRight' && lane < 2) lane++;
-    updatePlayer();
-});
-
-let touchStartX = 0;
-wrapper.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
-wrapper.addEventListener('touchend', e => {
-    if (!isPlaying) return;
-    let diff = touchStartX - e.changedTouches[0].screenX;
-    if (diff > 40 && lane > 0) lane--;
-    else if (diff < -40 && lane < 2) lane++;
-    updatePlayer();
-}, {passive: true});
-
-document.getElementById('btn-start').onclick = startGame;
-document.getElementById('btn-restart').onclick = startGame;
+document.getElementById('btn-start').onclick = () => { document.getElementById('menu').classList.remove('active'); initGame(); };
+document.getElementById('btn-restart').onclick = () => { document.getElementById('game-over').classList.remove('active'); initGame(); };
 
 document.getElementById('btn-save').onclick = function() {
     const originalText = this.innerText;
     this.innerText = "saving...";
     html2canvas(document.getElementById('ss-export'), { backgroundColor: "#05000a", scale: 2, logging: false }).then(canvas => {
         const link = document.createElement('a');
-        link.download = 'seismic-record.png';
+        link.download = 'seismic-gravity-record.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
         this.innerText = "saved!";
@@ -190,6 +241,6 @@ document.getElementById('btn-save').onclick = function() {
 };
 
 document.getElementById('btn-x').onclick = function() {
-    const txt = encodeURIComponent(`запускаю новий челендж seismic run! 🔥\nмій рекорд: ${Math.floor(score)} балів 🪨\n\nспробуй побити: https://alekshawk.github.io/seismic-run/\n\nа я передаю естафету: @IMenlikovaOG @juliapiekh @garbar27`);
+    const txt = encodeURIComponent(`запускаю новий челендж seismic gravity! 🚀\nмій рекорд: ${Math.floor(score)} балів 🪨\n\nспробуй побити: https://alekshawk.github.io/seismic-run/\n\nа я передаю естафету: @IMenlikovaOG @juliapiekh @garbar27`);
     window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
 };
