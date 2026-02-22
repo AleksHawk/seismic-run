@@ -70,7 +70,6 @@ let w, h;
 function resize() { w = wrapper.clientWidth; h = wrapper.clientHeight; canvas.width = w; canvas.height = h; }
 window.addEventListener('resize', resize); resize();
 
-// ОРИГІНАЛЬНА ФІЗИКА І ШВИДКІСТЬ
 let isLive = false, score = 0, speed = 7.5;
 let energy = 0, feverMode = false, feverTimer = 0;
 let frameCount = 0, shakeTime = 0;
@@ -185,15 +184,17 @@ function loop() {
     if (isLive && frameCount % Math.max(20, 90 - Math.floor(speed*1.5)) === 0) spawn();
 
     if (isLive) {
-        // ОРИГІНАЛЬНА ФІЗИКА (0.6 і 0.4)
+        // ОНОВЛЕНА ШВИДКА ФІЗИКА РОКІ
         if (isThrusting) { 
-            p.vy -= 0.6; 
+            p.vy -= 0.9; // Піднімається швидше (було 0.6)
             createParticles(p.x + 10, p.y + p.h, '#ff4500', 2); 
         } else { 
-            p.vy += 0.4; 
+            p.vy += 0.7; // Падає швидше (було 0.4)
         }
         
-        p.vy *= 0.92; p.y += p.vy;
+        p.vy *= 0.90; // Менше "плаває" по інерції, зупиняється різкіше (було 0.92)
+        p.y += p.vy;
+        
         if (p.y + p.h > p.floorY) { p.y = p.floorY - p.h; p.vy = 0; } else if (p.y < p.ceilY) { p.y = p.ceilY; p.vy = 0; }
         score += feverMode ? 0.3 : 0.1; scoreEl.innerText = Math.floor(score);
         if (feverMode) createParticles(p.x, p.y + p.h/2, '#ffaa00', 1);
