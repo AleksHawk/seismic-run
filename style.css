@@ -1,77 +1,76 @@
 body {
-    margin: 0; background-color: #000;
-    color: #fff; font-family: 'Orbitron', sans-serif;
-    display: flex; justify-content: center; align-items: center;
-    min-height: 100vh; overflow: hidden; touch-action: none;
+    margin:0;
+    overflow:hidden;
+    font-family:Orbitron;
+    background:black;
 }
 
-#game-container {
-    position: relative; width: 100vw; max-width: 450px; height: 100vh;
-    background: radial-gradient(circle at center, #1a0033 0%, #05000a 100%);
-    border-left: 2px solid #ff4500; border-right: 2px solid #ff4500;
-    overflow: hidden; display: flex;
+#game {
+    position:relative;
+    width:100vw;
+    height:100vh;
+    overflow:hidden;
 }
 
-/* Ефект космічної швидкості на фоні */
-.warp-line {
-    position: absolute; width: 2px; height: 100px;
-    background: linear-gradient(to bottom, transparent, #ff4500);
-    opacity: 0.3; z-index: 1;
+canvas {
+    position:absolute;
+    inset:0;
 }
 
-.lane {
-    flex: 1; height: 100%; border-right: 1px solid rgba(255, 69, 0, 0.1);
-    position: relative; z-index: 2;
-}
-
-#ui {
-    position: absolute; top: 40px; width: 100%; text-align: center;
-    font-size: 28px; color: #00ffff; z-index: 100; font-weight: 900;
-    text-shadow: 0 0 15px #00ffff;
+#score {
+    position:absolute;
+    top:30px;
+    width:100%;
+    text-align:center;
+    font-size:40px;
+    color:#00ffff;
+    text-shadow:0 0 20px #00ffff;
+    z-index:10;
 }
 
 #player {
-    position: absolute; bottom: 80px; width: 90px; height: 90px;
-    transition: left 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 50; display: flex; justify-content: center;
-}
-#player img { height: 100%; filter: drop-shadow(0 0 15px #ff4500); }
-
-/* Стильні перешкоди */
-.obstacle {
-    position: absolute; width: 70px; height: 50px;
-    background: #ff0000; border: 2px solid #fff;
-    box-shadow: 0 0 20px #f00, inset 0 0 10px #000;
-    border-radius: 8px;
+    position:absolute;
+    bottom:120px;
+    width:90px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:5;
+    transition:left .15s cubic-bezier(.2,.8,.3,1.5);
 }
 
-.stone-item {
-    position: absolute; width: 45px; height: 45px;
-    background: url('stone.png') no-repeat center/contain;
-    filter: drop-shadow(0 0 15px #00ffff) brightness(1.2);
-    animation: rotateStone 2s infinite linear;
+#player img {
+    width:100%;
+    filter:drop-shadow(0 0 25px #ff4500);
 }
 
-@keyframes rotateStone { from { transform: translateX(-50%) rotate(0deg); } to { transform: translateX(-50%) rotate(360deg); } }
-
-/* Оверлей меню */
-.overlay {
-    position: absolute; inset: 0; background: rgba(0,0,0,0.9);
-    display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000;
-    backdrop-filter: blur(10px);
-}
-.overlay.active { display: flex; }
-.menu-logo { width: 220px; margin-bottom: 30px; filter: drop-shadow(0 0 20px #ff4500); }
-
-.play-btn {
-    background: linear-gradient(45deg, #ff4500, #ffaa00);
-    border: none; padding: 20px 60px; color: #fff;
-    font-family: 'Orbitron'; font-size: 22px; cursor: pointer;
-    border-radius: 50px; font-weight: 900;
-    box-shadow: 0 0 30px rgba(255, 69, 0, 0.6);
+#menu {
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.9);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    backdrop-filter:blur(10px);
+    z-index:20;
 }
 
-.screenshot-export {
-    position: absolute; top: -9999px; width: 500px; height: 800px;
-    background: #05000a; display: flex; flex-direction: column; align-items: center; justify-content: center;
+#menu.active { display:flex; }
+#menu:not(.active){ display:none; }
+
+.logo {
+    width:250px;
+    margin-bottom:30px;
+}
+
+button {
+    padding:18px 60px;
+    font-size:22px;
+    border:none;
+    border-radius:50px;
+    background:linear-gradient(45deg,#ff4500,#ffaa00);
+    color:white;
+    font-family:Orbitron;
+    cursor:pointer;
+    box-shadow:0 0 40px #ff4500;
 }
