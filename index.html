@@ -3,28 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>seismic surf</title>
+<title>seismic gravity</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <div id="game-wrapper">
-    <canvas id="bg-canvas"></canvas>
-    <div id="ui-score">score: <span id="score-val">0</span></div>
+    <canvas id="game-canvas"></canvas>
     
-    <div class="lane-lines">
-        <div class="line"></div>
-        <div class="line"></div>
+    <div id="ui">
+        <div class="score-text">score: <span id="score-val">0</span></div>
+        <div class="combo-text" id="combo-val">combo: 0</div>
     </div>
-    
-    <div id="entities"></div>
-    <div id="player"><img src="rocky.png" alt="rocky"></div>
 
     <div id="menu" class="overlay active">
         <img src="logo.svg" class="logo" alt="logo">
-        <h1>seismic surf</h1>
-        <p>swipe left/right or use arrows</p>
+        <h1>seismic gravity</h1>
+        <p>tap or space to flip gravity</p>
         <button id="btn-start">start run</button>
     </div>
 
@@ -41,14 +38,15 @@
 
 <div id="ss-export" class="ss-export">
     <img src="logo.svg" class="ss-logo" alt="logo">
-    <h2>i survived seismic surf!</h2>
+    <h2>i defied gravity!</h2>
     <div class="ss-box">
         <p>score</p>
         <h1 id="ss-score-val">0</h1>
     </div>
     <img src="rocky.png" class="ss-rocky" alt="rocky">
-    <p class="ss-foot">can you beat hawk's score?</p>
+    <p class="ss-foot">can you beat this?</p>
 </div>
+
 <script src="script.js"></script>
 </body>
 </html>
