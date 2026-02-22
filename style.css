@@ -23,8 +23,13 @@ canvas { position: absolute; inset: 0; z-index: 1; display: block; }
 }
 
 .score-text { font-size: 28px; color: #ffaa00; text-shadow: 0 0 15px #ffaa00; font-weight: 900; }
-.combo-text { font-size: 24px; color: #00ffff; text-shadow: 0 0 15px #00ffff; font-weight: 700; transition: 0.2s; }
-.combo-text.fever { color: #ff4500; text-shadow: 0 0 25px #ff4500; transform: scale(1.2); }
+.energy-text { font-size: 24px; color: #00ffff; text-shadow: 0 0 15px #00ffff; font-weight: 700; transition: 0.2s; }
+.energy-text.fever { color: #ff4500; text-shadow: 0 0 25px #ff4500; transform: scale(1.1); animation: pulse 0.5s infinite alternate;}
+
+@keyframes pulse {
+    from { transform: scale(1.1); text-shadow: 0 0 20px #ff4500; }
+    to { transform: scale(1.2); text-shadow: 0 0 40px #ffaa00; color: #ffaa00; }
+}
 
 .overlay {
     position: absolute; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
