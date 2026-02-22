@@ -2,33 +2,53 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SEISMIC SURF</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>seismic surf</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+<div id="game-wrapper">
+    <canvas id="bg-canvas"></canvas>
+    <div id="ui-score">score: <span id="score-val">0</span></div>
+    
+    <div class="lane-lines">
+        <div class="line"></div>
+        <div class="line"></div>
+    </div>
+    
+    <div id="entities"></div>
+    <div id="player"><img src="rocky.png" alt="rocky"></div>
 
-<div id="game">
+    <div id="menu" class="overlay active">
+        <img src="logo.svg" class="logo" alt="logo">
+        <h1>seismic surf</h1>
+        <p>swipe left/right or use arrows</p>
+        <button id="btn-start">start run</button>
+    </div>
 
-<canvas id="bg"></canvas>
-
-<div id="score">0</div>
-
-<div id="player">
-    <img src="rocky.png">
+    <div id="game-over" class="overlay">
+        <h1 class="red">wasted!</h1>
+        <p>final score: <span id="final-score">0</span></p>
+        <div class="buttons">
+            <button id="btn-restart">play again</button>
+            <button id="btn-save" class="alt">save pic</button>
+            <button id="btn-x" class="x-btn">share to x</button>
+        </div>
+    </div>
 </div>
 
-<div id="menu" class="active">
-    <img src="logo.svg" class="logo">
-    <h1>SEISMIC SURF</h1>
-    <button onclick="startGame()">START RUN</button>
+<div id="ss-export" class="ss-export">
+    <img src="logo.svg" class="ss-logo" alt="logo">
+    <h2>i survived seismic surf!</h2>
+    <div class="ss-box">
+        <p>score</p>
+        <h1 id="ss-score-val">0</h1>
+    </div>
+    <img src="rocky.png" class="ss-rocky" alt="rocky">
+    <p class="ss-foot">can you beat hawk's score?</p>
 </div>
-
-</div>
-
 <script src="script.js"></script>
 </body>
 </html>
