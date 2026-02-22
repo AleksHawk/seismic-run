@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=100">
 </head>
 <body>
 
@@ -34,7 +34,7 @@
         <h1>seismic run</h1>
         
         <div class="input-group">
-             <input type="text" id="player-name" placeholder="enter nickname" maxlength="12" autocomplete="off" oninput="this.value=this.value.replace(/[^a-zA-Z0-9 ]/g,'')">
+             <input type="text" id="player-name" placeholder="enter nickname" maxlength="12" autocomplete="off">
              <p class="error-msg" id="input-error-msg">nickname required!</p>
         </div>
        
@@ -83,6 +83,6 @@
     <p class="ss-foot" id="ss-foot-text">can you beat my score?</p>
 </div>
 
-<script src="script.js"></script>
+<script src="script.js?v=100"></script>
 </body>
 </html>
