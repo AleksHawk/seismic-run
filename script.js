@@ -3,6 +3,7 @@ const ctx = canvas.getContext('2d');
 const wrapper = document.getElementById('game-wrapper');
 const scoreEl = document.getElementById('score-val');
 const comboEl = document.getElementById('combo-val');
+const playerNameInput = document.getElementById('player-name');
 
 // аудіо
 const bgMusic = new Audio('https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3');
@@ -38,6 +39,10 @@ function initGame() {
     p.y = p.floorY - p.h; p.vy = 0;
     scoreEl.innerText = score; updateCombo();
     isLive = true;
+    
+    let nickname = playerNameInput.value.trim() || 'hawk';
+    document.getElementById('ss-foot-text').innerText = `can you beat ${nickname}'s score?`;
+
     bgMusic.currentTime = 0; bgMusic.play().catch(()=>{});
     requestAnimationFrame(loop);
 }
@@ -76,8 +81,8 @@ function createParticles(x, y, color, count) {
     for (let i = 0; i < count; i++) {
         particles.push({
             x: x, y: y,
-            vx: (Math.random() - 0.5) * 10,
-            vy: (Math.random() - 0.5) * 10,
+            vx: (Math.random() - 0.5) * 15,
+            vy: (Math.random() - 0.5) * 15,
             life: Math.random() * 20 + 10, color: color
         });
     }
@@ -134,28 +139,34 @@ function loop() {
     if (!isLive && particles.length === 0) { ctx.restore(); return; }
     if (isLive) frameCount++;
 
-    if (isLive && frameCount % Math.max(30, 90 - Math.floor(speed*1.5)) === 0) spawn();
+    // хардкорне прискорення кожні 5 секунд
+    if (isLive && frameCount % 300 === 0) {
+        speed += 1.5;
+        wrapper.style.boxShadow = "inset 0 0 60px #ff0000";
+        setTimeout(() => wrapper.style.boxShadow = "none", 300);
+    }
+
+    if (isLive && frameCount % Math.max(20, 90 - Math.floor(speed*1.5)) === 0) spawn();
 
     // фізика джетпака
     if (isLive) {
         if (isThrusting) {
-            p.vy -= 0.6; // тяга вгору
-            createParticles(p.x + 10, p.y + p.h, '#ff4500', 2); // вогонь з джетпака
+            p.vy -= 0.6; 
+            createParticles(p.x + 10, p.y + p.h, '#ff4500', 2); 
         } else {
-            p.vy += 0.4; // гравітація вниз
+            p.vy += 0.4; 
         }
         
-        p.vy *= 0.92; // опір повітря
+        p.vy *= 0.92; 
         p.y += p.vy;
         
-        // обмеження підлоги та стелі
         if (p.y + p.h > p.floorY) {
             p.y = p.floorY - p.h; p.vy = 0;
         } else if (p.y < p.ceilY) {
             p.y = p.ceilY; p.vy = 0;
         }
 
-        score += feverMode ? 0.2 : 0.1;
+        score += feverMode ? 0.3 : 0.1;
         scoreEl.innerText = Math.floor(score);
         
         if (feverMode) createParticles(p.x, p.y + p.h/2, '#ffaa00', 1);
@@ -171,8 +182,20 @@ function loop() {
         ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
         ctx.shadowBlur = 0;
 
+        // перевірка зіткнення
         if (isLive && p.x + 10 < obs.x + obs.w && p.x + p.w - 10 > obs.x && p.y + 10 < obs.y + obs.h && p.y + p.h - 10 > obs.y) {
-            die();
+            if (feverMode) {
+                // розбиваємо трубу
+                score += 50;
+                hitSfx.currentTime = 0; hitSfx.play().catch(()=>{});
+                shakeTime = 15;
+                createParticles(obs.x + obs.w/2, obs.y + obs.h/2, '#ff0000', 40);
+                if(navigator.vibrate) navigator.vibrate(100);
+                obstacles.splice(i, 1);
+                continue;
+            } else {
+                die();
+            }
         }
         if (obs.x + obs.w < 0) obstacles.splice(i, 1);
     }
@@ -243,6 +266,7 @@ document.getElementById('btn-save').onclick = function() {
 };
 
 document.getElementById('btn-x').onclick = function() {
-    const txt = encodeURIComponent(`запускаю новий челендж seismic run! 🚀\nмій рекорд: ${Math.floor(score)} балів 🪨\n\nспробуй побити: https://alekshawk.github.io/seismic-run/\n\nа я передаю естафету: @IMenlikovaOG @juliapiekh @garbar27`);
+    let nickname = playerNameInput.value.trim() || 'hawk';
+    const txt = encodeURIComponent(`запускаю новий челендж seismic run! 🚀\nмій рекорд (${nickname}): ${Math.floor(score)} балів 🪨\n\nспробуй побити: https://alekshawk.github.io/seismic-run/\n\nа я передаю естафету: @IMenlikovaOG @juliapiekh @garbar27`);
     window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
 };
