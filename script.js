@@ -1,4 +1,4 @@
-const canvas = const canvas = document.getElementById('game-canvas');
+const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const wrapper = document.getElementById('game-wrapper');
 const scoreEl = document.getElementById('score-val');
@@ -257,4 +257,3 @@ document.getElementById('btn-x').onclick = function() {
     const txt = encodeURIComponent(`participating in a challenge from @AleksYastreb! 🚀\nmy record (${currentPlayerName}): ${Math.floor(score)} points 🪨\nmade with love for the @SeismicSys community ❤️\n\ntry to beat it: https://alekshawk.github.io/seismic-run/\n\ni pass the baton to: @`);
     window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
 };
-```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
