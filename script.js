@@ -4,6 +4,7 @@ const wrapper = document.getElementById('game-wrapper');
 const scoreEl = document.getElementById('score-val');
 const comboEl = document.getElementById('combo-val');
 const playerNameInput = document.getElementById('player-name');
+const inputGroup = document.querySelector('.input-group');
 
 // аудіо
 const bgMusic = new Audio('https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3');
@@ -28,8 +29,30 @@ let isLive = false, score = 0, speed = 6, combo = 0, feverMode = false;
 let frameCount = 0, shakeTime = 0;
 let isThrusting = false;
 let obstacles = [], stones = [], particles = [];
+let currentPlayerName = "";
 
 const p = { x: 100, y: 0, w: 60, h: 60, vy: 0, floorY: 0, ceilY: 0 };
+
+// ФУНКЦІЯ СТАРТУ (з перевіркою ніка)
+function tryStartGame() {
+    const name = playerNameInput.value.trim();
+    if (name === "") {
+        // Якщо нік пустий - показуємо помилку
+        playerNameInput.classList.add('input-error');
+        inputGroup.classList.add('has-error');
+        // Прибираємо клас помилки через секунду
+        setTimeout(() => {
+            playerNameInput.classList.remove('input-error');
+            inputGroup.classList.remove('has-error');
+        }, 1000);
+        return; // Зупиняємо старт гри
+    }
+
+    // Якщо все ок - починаємо
+    currentPlayerName = name;
+    document.getElementById('menu').classList.remove('active');
+    initGame();
+}
 
 function initGame() {
     score = 0; speed = 6; combo = 0; feverMode = false; frameCount = 0;
@@ -40,8 +63,8 @@ function initGame() {
     scoreEl.innerText = score; updateCombo();
     isLive = true;
     
-    let nickname = playerNameInput.value.trim() || 'hawk';
-    document.getElementById('ss-foot-text').innerText = `can you beat ${nickname}'s score?`;
+    // Оновлюємо текст на скріншоті
+    document.getElementById('ss-foot-text').innerText = `can you beat ${currentPlayerName}'s score?`;
 
     bgMusic.currentTime = 0; bgMusic.play().catch(()=>{});
     requestAnimationFrame(loop);
@@ -54,9 +77,9 @@ function stopThrust() { isThrusting = false; }
 window.addEventListener('keydown', e => { if(e.code === 'Space') startThrust(); });
 window.addEventListener('keyup', e => { if(e.code === 'Space') stopThrust(); });
 
-wrapper.addEventListener('touchstart', e => { startThrust(); }, {passive: true});
+wrapper.addEventListener('touchstart', e => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') startThrust(); }, {passive: true});
 wrapper.addEventListener('touchend', e => { stopThrust(); }, {passive: true});
-wrapper.addEventListener('mousedown', e => { startThrust(); });
+wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') startThrust(); });
 wrapper.addEventListener('mouseup', e => { stopThrust(); });
 
 function spawn() {
@@ -249,7 +272,8 @@ function loop() {
     if (isLive || shakeTime > 0 || particles.length > 0) requestAnimationFrame(loop);
 }
 
-document.getElementById('btn-start').onclick = () => { document.getElementById('menu').classList.remove('active'); initGame(); };
+// Використовуємо нову функцію перевірки
+document.getElementById('btn-start').onclick = tryStartGame;
 document.getElementById('btn-restart').onclick = () => { document.getElementById('game-over').classList.remove('active'); initGame(); };
 
 document.getElementById('btn-save').onclick = function() {
@@ -266,7 +290,7 @@ document.getElementById('btn-save').onclick = function() {
 };
 
 document.getElementById('btn-x').onclick = function() {
-    let nickname = playerNameInput.value.trim() || 'hawk';
-    const txt = encodeURIComponent(`запускаю новий челендж seismic run! 🚀\nмій рекорд (${nickname}): ${Math.floor(score)} балів 🪨\n\nспробуй побити: https://alekshawk.github.io/seismic-run/\n\nа я передаю естафету: @IMenlikovaOG @juliapiekh @garbar27`);
+    // Використовуємо введений нікнейм
+    const txt = encodeURIComponent(`запускаю новий челендж seismic run! 🚀\nмій рекорд (${currentPlayerName}): ${Math.floor(score)} балів 🪨\n\nспробуй побити: https://alekshawk.github.io/seismic-run/\n\nа я передаю естафету: @IMenlikovaOG @juliapiekh @garbar27`);
     window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
 };
