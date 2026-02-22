@@ -6,6 +6,8 @@
 <title>seismic jetpack</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,13 +21,22 @@
     </div>
 
     <div id="menu" class="overlay active">
-        <div class="high-score-box">local record: <span id="best-name">nobody</span> - <span id="best-score">0</span></div>
+        <div class="lang-switch">
+            <span class="lang-btn active" data-lang="en">🇬🇧 en</span> | 
+            <span class="lang-btn" data-lang="ua">🇺🇦 ua</span>
+        </div>
+
+        <div class="leaderboard-box">
+            <h3 id="text-top">global top</h3>
+            <div class="lb-row"><span class="lb-name" id="best-name">nobody</span><span class="lb-score" id="best-score">0</span></div>
+            <div class="lb-wait" id="text-lb-wait">firebase pending...</div>
+        </div>
         
         <div class="logo-container">
             <img src="logo.svg" class="logo" alt="logo">
         </div>
         
-        <h1>seismic run</h1>
+        <h1 id="text-title">seismic run</h1>
         
         <div class="input-group">
              <input type="text" id="player-name" placeholder="enter nickname" maxlength="12" autocomplete="off" oninput="this.value=this.value.replace(/[^a-zA-Z0-9 ]/g,'')">
@@ -35,8 +46,8 @@
         <button id="btn-start">start run</button>
 
         <div class="rules-box">
-            <h3>rules:</h3>
-            <ul>
+            <h3 id="text-rules">rules:</h3>
+            <ul id="rules-list">
                 <li>hold space or touch screen to fly up</li>
                 <li>collect 5 stones to activate superpower</li>
                 <li>avoid red obstacles</li>
@@ -45,13 +56,13 @@
         </div>
 
         <div class="credits-footer">
-            made with love by <a href="https://twitter.com/AleksYastreb" target="_blank">Hawk</a> for the <a href="https://twitter.com/SeismicSys" target="_blank">Seismic community</a>
+            made with love by <a href="https://twitter.com/AleksYastreb" target="_blank">hawk</a> for the <a href="https://twitter.com/SeismicSys" target="_blank">seismic community</a>
         </div>
     </div>
 
     <div id="game-over" class="overlay">
-        <h1 class="red">wasted!</h1>
-        <p>final score: <span id="final-score">0</span></p>
+        <h1 class="red" id="text-wasted">wasted!</h1>
+        <p id="text-final">final score: <span id="final-score">0</span></p>
         <div class="buttons">
             <button id="btn-restart">play again</button>
             <button id="btn-save" class="alt">save pic</button>
@@ -62,9 +73,9 @@
 
 <div id="ss-export" class="ss-export">
     <img src="logo.svg" class="ss-logo" alt="logo">
-    <h2>i survived seismic run!</h2>
+    <h2 id="text-ss-title">i survived seismic run!</h2>
     <div class="ss-box">
-        <p>score</p>
+        <p id="text-ss-score">score</p>
         <h1 id="ss-score-val">0</h1>
     </div>
     <img src="rocky.png" class="ss-rocky" alt="rocky">
