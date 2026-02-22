@@ -21,8 +21,22 @@
     <div id="menu" class="overlay active">
         <img src="logo.svg" class="logo" alt="logo">
         <h1>seismic run</h1>
-        <p>hold space or touch to fly</p>
-        <input type="text" id="player-name" placeholder="введи свій нікнейм" maxlength="15">
+        
+        <div class="rules-box">
+            <h3>RULES:</h3>
+            <ul>
+                <li>Hold SPACE or touch screen to fly up.</li>
+                <li>Collect stones for points & combo.</li>
+                <li>Avoid red obstacles.</li>
+                <li>COMBO x5 activates FEVER MODE (you can smash obstacles!).</li>
+            </ul>
+        </div>
+
+        <div class="input-group">
+             <input type="text" id="player-name" placeholder="enter nickname" maxlength="12" autocomplete="off">
+             <p class="error-msg" id="input-error-msg">nickname required!</p>
+        </div>
+       
         <button id="btn-start">start run</button>
     </div>
 
