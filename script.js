@@ -241,7 +241,9 @@ document.getElementById('btn-save').onclick = function() {
         this.innerText = "saved!"; setTimeout(() => this.innerText = originalText, 2000);
     });
 };
+
+// Оновлений текст для Twitter X
 document.getElementById('btn-x').onclick = function() {
-    const txt = encodeURIComponent(`participating in a challenge from @AleksYastreb! 🚀\nmy record (${currentPlayerName}): ${Math.floor(score)} points 🪨\n\ntry to beat it: https://alekshawk.github.io/seismic-run/\n\ni pass the baton to: @`);
+    const txt = encodeURIComponent(`participating in a challenge from @AleksYastreb! 🚀\nmy record (${currentPlayerName}): ${Math.floor(score)} points 🪨\nmade with love for the @SeismicSys community ❤️\n\ntry to beat it: https://alekshawk.github.io/seismic-run/\n\ni pass the baton to: @`);
     window.open(`https://twitter.com/intent/tweet?text=${txt}`, '_blank');
 };
