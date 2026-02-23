@@ -7,8 +7,20 @@ const playerNameInput = document.getElementById('player-name');
 const inputGroup = document.querySelector('.input-group');
 
 const rulesI18n = {
-    en: { title: "rules:", r1: "hold space or touch screen to fly up", r2: "collect 5 stones to activate superpower", r3: "avoid red obstacles", r4: "in fever mode you are invincible!" },
-    ua: { title: "правила:", r1: "затисни екран щоб летіти", r2: "збери 5 камінців для суперсили", r3: "уникай червоних труб", r4: "у fever mode ти безсмертний!" }
+    en: {
+        title: "rules:",
+        r1: "hold space or touch screen to fly up",
+        r2: "collect 5 stones to activate superpower",
+        r3: "avoid red obstacles",
+        r4: "in fever mode you are invincible!"
+    },
+    ua: {
+        title: "правила:",
+        r1: "затисни екран щоб летіти",
+        r2: "збери 5 камінців для суперсили",
+        r3: "уникай червоних труб",
+        r4: "у fever mode ти безсмертний!"
+    }
 };
 
 function setRulesLang(lang) {
@@ -24,7 +36,6 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
     };
 });
 
-// ПРАВИЛЬНЕ НАЛАШТУВАННЯ FIREBASE (COMPAT SDK)
 const firebaseConfig = {
   apiKey: "AIzaSyBF9qulhD2vkXaVvFWCP9yUypIu3xJLmto",
   authDomain: "seismic-run-8368a.firebaseapp.com",
@@ -38,15 +49,28 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ФУНКЦІЯ ЗАВАНТАЖЕННЯ ГЛОБАЛЬНОГО РЕКОРДУ В МЕНЮ
 function loadGlobalBest() {
-    db.ref('leaderboard').orderByChild('score').limitToLast(1).on('value', (snapshot) => {
+    db.ref('leaderboard').orderByChild('score').limitToLast(5).on('value', (snapshot) => {
+        const lbList = document.getElementById('lb-list');
         if (snapshot.exists()) {
+            let topPlayers = [];
             snapshot.forEach((child) => {
-                document.getElementById('best-name').innerText = child.key;
-                document.getElementById('best-score').innerText = Math.floor(child.val().score);
-                document.getElementById('text-lb-wait').innerText = "global record live";
+                topPlayers.push({ name: child.key, score: child.val().score });
             });
+            
+            topPlayers.reverse();
+            lbList.innerHTML = ''; 
+            
+            topPlayers.forEach((player, index) => {
+                const row = document.createElement('div');
+                row.className = 'lb-row';
+                row.innerHTML = `<span class="lb-rank">#${index + 1}</span>
+                                 <span class="lb-name">${player.name}</span>
+                                 <span class="lb-score">${Math.floor(player.score)}</span>`;
+                lbList.appendChild(row);
+            });
+        } else {
+            lbList.innerHTML = '<div class="lb-wait">no records yet</div>';
         }
     });
 }
@@ -54,8 +78,6 @@ loadGlobalBest();
 
 let bestLocalScore = localStorage.getItem('seismic_best_score') || 0;
 let bestLocalName = localStorage.getItem('seismic_best_name') || 'nobody';
-document.getElementById('best-name').innerText = bestLocalName;
-document.getElementById('best-score').innerText = bestLocalScore;
 
 const bgMusic = new Audio('https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3');
 bgMusic.loop = true; bgMusic.volume = 0.4;
@@ -70,8 +92,11 @@ function resize() { w = wrapper.clientWidth; h = wrapper.clientHeight; canvas.wi
 window.addEventListener('resize', resize); resize();
 
 let isLive = false, score = 0, speed = 7.5;
-let energy = 0, feverMode = false, feverTimer = 0, frameCount = 0, shakeTime = 0;
-let isThrusting = false, obstacles = [], stones = [], particles = [], currentPlayerName = "";
+let energy = 0, feverMode = false, feverTimer = 0;
+let frameCount = 0, shakeTime = 0;
+let isThrusting = false;
+let obstacles = [], stones = [], particles = [];
+let currentPlayerName = "";
 
 const p = { x: 100, y: 0, w: 60, h: 60, vy: 0, floorY: 0, ceilY: 0 };
 
@@ -90,10 +115,11 @@ function tryStartGame() {
 
 function initGame() {
     score = 0; speed = 7.5; energy = 0; feverMode = false; feverTimer = 0; frameCount = 0;
-    obstacles = []; stones = []; particles = []; p.vy = 0;
-    p.floorY = h - 30; p.ceilY = 30; p.y = p.floorY - p.h;
+    obstacles = []; stones = []; particles = [];
+    isThrusting = false; p.floorY = h - 30; p.ceilY = 30; p.y = p.floorY - p.h; p.vy = 0;
     scoreEl.innerText = score; energyEl.innerText = `energy: 0/5`; energyEl.classList.remove('fever');
     isLive = true;
+    
     document.getElementById('ss-foot-text').innerText = `can you beat ${currentPlayerName}'s score?`;
     bgMusic.currentTime = 0; bgMusic.play().catch(()=>{});
     requestAnimationFrame(loop);
@@ -105,12 +131,11 @@ function stopThrust() { isThrusting = false; }
 window.addEventListener('keydown', e => { if(e.code === 'Space') startThrust(); });
 window.addEventListener('keyup', e => { if(e.code === 'Space') stopThrust(); });
 wrapper.addEventListener('touchstart', e => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'A' && !e.target.classList.contains('lang-btn')) startThrust(); }, {passive: true});
-wrapper.addEventListener('touchend', stopThrust, {passive: true});
+wrapper.addEventListener('touchend', e => { stopThrust(); }, {passive: true});
 wrapper.addEventListener('mousedown', e => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'A' && !e.target.classList.contains('lang-btn')) startThrust(); });
-wrapper.addEventListener('mouseup', stopThrust);
+wrapper.addEventListener('mouseup', e => { stopThrust(); });
 
 function spawn() {
-    // ДИНАМІКА: кожні 15 секунд (900 кадрів) камінців стає менше
     let level = Math.floor(frameCount / 900);
     let obstacleThreshold = Math.min(0.70, 0.40 + (level * 0.10));
     
@@ -138,7 +163,6 @@ function die() {
     
     let finalSc = Math.floor(score);
     
-    // СИНХРОНІЗАЦІЯ З FIREBASE
     if (finalSc > 0 && currentPlayerName) {
         const userRef = db.ref('leaderboard/' + currentPlayerName);
         userRef.once('value').then((snapshot) => {
