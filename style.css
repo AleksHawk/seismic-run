@@ -46,19 +46,23 @@ canvas { position: absolute; inset: 0; z-index: 1; display: block; }
     margin-bottom: 20px; flex-shrink: 0; box-shadow: 0 0 15px rgba(255,170,0,0.2);
 }
 .leaderboard-box h3 { color: #ffaa00; margin: 0 0 10px 0; font-size: 16px; text-transform: lowercase; }
-.lb-row { display: flex; justify-content: space-between; color: #fff; font-size: 14px; margin-bottom: 5px; }
+
+#lb-list { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.lb-row { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 14px; padding: 3px 0; border-bottom: 1px solid rgba(255,170,0,0.2); }
+.lb-row:last-child { border-bottom: none; }
+.lb-rank { color: #ffaa00; width: 25px; text-align: left; font-size: 12px; }
+.lb-name { flex-grow: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-score { color: #00ffff; font-weight: bold; }
-.lb-wait { font-size: 10px; color: #555; margin-top: 5px; }
+.lb-wait { font-size: 10px; color: #555; text-align: center; width: 100%; }
 
 .logo-container {
     background: #fff; padding: 15px 25px; border-radius: 20px;
-    margin-bottom: 15px; box-shadow: 0 0 20px #ffffff, 0 0 40px #ff4500;
+    margin-bottom: 20px; box-shadow: 0 0 20px #ffffff, 0 0 40px #ff4500;
     display: flex; justify-content: center; align-items: center; flex-shrink: 0;
 }
 .logo { width: 200px; height: auto; display: block; }
 
-h1 { font-size: 32px; text-shadow: 0 0 20px #ff4500; margin-bottom: 15px; margin-top: 0; flex-shrink: 0;}
-h1.red { color: #ff0000; text-shadow: 0 0 25px #ff0000; }
+h1.red { font-size: 32px; color: #ff0000; text-shadow: 0 0 25px #ff0000; margin-bottom: 15px; margin-top: 0; flex-shrink: 0;}
 p { color: #aaa; margin-bottom: 20px; font-size: 16px; }
 
 .input-group { position: relative; margin-bottom: 20px; flex-shrink: 0;}
