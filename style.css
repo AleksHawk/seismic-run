@@ -7,7 +7,11 @@ body {
 }
 
 #game-wrapper {
-    position: relative; width: 100vw; max-width: 800px; height: 100vh;
+    position: relative; 
+    width: 100vw; 
+    max-width: 800px; 
+    height: 100vh; 
+    max-height: 850px; /* 🛑 АНТИЧІТ: блокує розтягування екрану по висоті при зумі */
     background: #0a0014; 
     border: 4px solid #ff4500; overflow: hidden;
     box-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
